@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.30</title>
+<title>もこぼっと v1.5.31</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -3057,14 +3057,52 @@ function mazeTwistyRisk(grid){
  }
  return {cutPoints:cuts.size,longestDeadEnd};
 }
+// v1.5.31：えだわかれ型の地形リスクを調べる。
+// 死角になりやすい長い枝道と、1マスの封鎖で大きな範囲が通行不能に
+// なる箇所を避ける。一方で短い行き止まりは探索の特徴として残す。
+function mazeBranchRisk(grid){
+ const {cutPoints,longestDeadEnd}=mazeTwistyRisk(grid);
+ let deadEnds=0;
+ for(let y=1;y<MAZE_H-1;y++)for(let x=1;x<MAZE_W-1;x++){
+  if(grid[y][x]!==0)continue;
+  let exits=0;
+  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS))if(mazeWalkable(grid,x+dx,y+dy))exits++;
+  if(exits===1)deadEnds++;
+ }
+ // 開始地点を根にした DFS。任意の1マスが塞がれた際、根から切り離される
+ // 通路の最大数を求める。敵による通路封鎖の危険度として利用する。
+ const seen=new Map(),low=new Map();let tick=0,maxCutOff=0;
+ function visit(x,y,parent=null){
+  const k=mazeKey(x,y);seen.set(k,++tick);low.set(k,tick);
+  let size=1,cutOff=0;
+  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS)){
+   const nx=x+dx,ny=y+dy,nk=mazeKey(nx,ny);
+   if(!mazeWalkable(grid,nx,ny)||nk===parent)continue;
+   if(!seen.has(nk)){
+    const childSize=visit(nx,ny,k);size+=childSize;
+    low.set(k,Math.min(low.get(k),low.get(nk)));
+    if(parent!==null&&low.get(nk)>=seen.get(k))cutOff+=childSize;
+   }else low.set(k,Math.min(low.get(k),seen.get(nk)));
+  }
+  maxCutOff=Math.max(maxCutOff,cutOff);
+  return size;
+ }
+ visit(1,1);
+ return {cutPoints,longestDeadEnd,deadEnds,maxCutOff};
+}
 function makeMaze(forceType=null){
  const pool=MAZE_TYPES.filter(t=>t.id!==lastMazeType);
  const type=forceType&&MAZE_TYPES.find(t=>t.id===forceType)||choose(pool.length?pool:MAZE_TYPES);
- let safestTwisty=null;
- for(let attempt=0;attempt<16;attempt++){
+ let safestTwisty=null,safestBranch=null;
+ // 分岐型は条件を満たす候補を選ぶ必要があるため、少し多めに試す。
+ const maxAttempts=type.id==='branch'?32:16;
+ for(let attempt=0;attempt<maxAttempts;attempt++){
   const grid=mazeEmptyGrid();
   if(type.id==='branch'){
-   mazeCarveBranches(grid);mazeAddConnections(grid,random(3));
+   mazeCarveBranches(grid);
+   // 0〜2か所だった抜け道を増やす。ただし形を均一にしすぎないよう
+   // 14〜18か所を変動させ、短い行き止まりが残るものを選ぶ。
+   mazeAddConnections(grid,14+random(5));
   }else{
    mazeCarveDepth(grid,type.id==='twisty'?.67:.16);
    // 以前は2〜4本だけで、長い細道の途中で敵に塞がれやすかった。
@@ -3083,12 +3121,24 @@ function makeMaze(forceType=null){
    if(!safestTwisty||score<safestTwisty.score)safestTwisty={grid,score};
    if(risk.cutPoints>11||risk.longestDeadEnd>8)continue;
   }
+  if(type.id==='branch'){
+   const risk=mazeBranchRisk(grid);
+   const score=risk.cutPoints*1.7+risk.longestDeadEnd*3.2+
+    risk.maxCutOff*1.6+Math.max(0,6-risk.deadEnds)*14;
+   if(!safestBranch||score<safestBranch.score)safestBranch={grid,score};
+   // 「行き止まりがない＝わっか型」とならないよう、最低5か所は残す。
+   if(risk.cutPoints>18||risk.longestDeadEnd>7||
+      risk.maxCutOff>18||risk.deadEnds<5)continue;
+  }
   lastMazeType=type.id;return {grid,type};
  }
- // 試行上限に当たっても、未調整の一本道には戻さず、最も安全な候補を採用する。
+ // 候補を作り直しても基準を満たさない場合は、最も安全だった配置を採用。
+ // 他方式の地形へ無断で置き換えず、分岐型の生成方式を維持する。
  if(safestTwisty){lastMazeType='twisty';return {grid:safestTwisty.grid,type}}
- const grid=mazeEmptyGrid();mazeCarveDepth(grid);
- if(type.id==='twisty')mazeAddConnections(grid,11);
+ if(safestBranch){lastMazeType='branch';return {grid:safestBranch.grid,type}}
+ const grid=mazeEmptyGrid();
+ if(type.id==='branch'){mazeCarveBranches(grid);mazeAddConnections(grid,16)}
+ else{mazeCarveDepth(grid);if(type.id==='twisty')mazeAddConnections(grid,11)}
  mazeOpenStartRoutes(grid);
  lastMazeType=type.id;return {grid,type};
 }
@@ -3425,7 +3475,7 @@ let pendingDataAction=null;
 function allDataSnapshot(){
  tidyEchoes();
  return {
-  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.30',savedAt:new Date().toISOString(),
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.31',savedAt:new Date().toISOString(),
   state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
   appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
   coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
