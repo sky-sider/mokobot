@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.31</title>
+<title>もこぼっと v1.5.33</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -2402,12 +2402,12 @@ const RUN_DIFFICULTY={
  normal:{speed:1,spawnMin:1.45,spawnRange:.8,shoot:1,bullet:1,shooterChance:1,item:1},
  hard:{speed:1.13,spawnMin:1.15,spawnRange:.58,shoot:.72,bullet:1.18,shooterChance:1,item:1.12}
 };
-// v1.5.29: もこと敵の移動テンポをどちらも約7〜8%緩やかにする。
-// 追跡率・敵数・残機・アイテム効果は従来のまま。
+// v1.5.33: 敵の1マス移動間隔のみ約7%延長。もこの速度はそのまま。
+// 追跡率・敵数・残機・アイテム効果・枝分かれ高難度補正は従来どおり。
 const MAZE_DIFFICULTY={
- easy:{lives:5,enemies:1,heroStep:.14,enemyStep:.84,chase:.43,powerSeconds:9},
- normal:{lives:3,enemies:2,heroStep:.15,enemyStep:.55,chase:.72,powerSeconds:7},
- hard:{lives:2,enemies:3,heroStep:.15,enemyStep:.42,chase:.90,powerSeconds:5.5}
+ easy:{lives:5,enemies:1,heroStep:.14,enemyStep:.90,chase:.43,powerSeconds:9},
+ normal:{lives:3,enemies:2,heroStep:.15,enemyStep:.59,chase:.72,powerSeconds:7},
+ hard:{lives:2,enemies:3,heroStep:.15,enemyStep:.45,chase:.90,powerSeconds:5.5}
 };
 let gameSprite=null;
 function bestKey(kind,difficulty){return kind+'Best'+DIFFICULTY_SUFFIX[difficulty]}
@@ -3306,7 +3306,11 @@ function collectMazePellet(){
  const m=mazeState,k=mazeKey(m.hero.x,m.hero.y);
  if(m.pellets.delete(k)){
   m.score+=m.power.has(k)?50:10;
-  if(m.power.delete(k)){$('mazeStatus').textContent='きらきら！ いまは つよいよ！';m.shield=MAZE_DIFFICULTY[m.difficulty].powerSeconds}
+  if(m.power.delete(k)){
+   $('mazeStatus').textContent='きらきら！ いまは つよいよ！';
+   // 枝道での退避が難しい高難度のみ、強化アイテムの効果時間に余裕を持たせる。
+   m.shield=m.mazeType==='branch'&&m.difficulty==='hard'?7.5:MAZE_DIFFICULTY[m.difficulty].powerSeconds;
+  }
   if(m.pellets.size===0){endMaze(true);return}
   if(m.score>currentBest('maze',m.difficulty)){
     gameStats.mazeBest=Math.max(gameStats.mazeBest,m.score);
@@ -3347,7 +3351,9 @@ function stepMazeEnemies(){
   const homeHero=mazeHomeSafe(m.hero.x,m.hero.y);
   const retreat=homeHero&&mazeHomeDistance(enemy.x,enemy.y)<8;
   const scatter=m.scatterFor>0;
-  const chase=!scatter&&!retreat&&Math.random()<MAZE_DIFFICULTY[m.difficulty].chase;
+  // 枝道が多い『えだわかれ』の高難度では、敵が奥で待ち伏せし続けないよう追跡率を軽く補正。
+  const chaseChance=m.mazeType==='branch'&&m.difficulty==='hard'?.82:MAZE_DIFFICULTY[m.difficulty].chase;
+  const chase=!scatter&&!retreat&&Math.random()<chaseChance;
   if(retreat||scatter){
    options.sort((a,b)=>{
     const sa=a.home+(a.minAlly<4?-6:0)+a.toHero*.55;
@@ -3475,7 +3481,7 @@ let pendingDataAction=null;
 function allDataSnapshot(){
  tidyEchoes();
  return {
-  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.31',savedAt:new Date().toISOString(),
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.33',savedAt:new Date().toISOString(),
   state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
   appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
   coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
