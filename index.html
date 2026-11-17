@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.33</title>
+<title>もこぼっと v1.5.35</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1357,16 +1357,21 @@ function initialPhrase(entry){
   const known=associations(memory).filter(link=>!(memory.noLinks||[]).includes(link));
   if(known.length)detail=choose(known);
  }
- if(group==='action'||group==='feeling'||group==='color'||group==='shape'){
-  const tails=group==='feeling'&&emotion==='puzzled'?['んー','ぎゅっ','あれ？']:
-   group==='feeling'&&emotion==='surprised'?['んー','あれ？','びっくり']:
-   ['みて','ふふ','ねえ'];
-  const forms=[
-   [companion,word,choose(tails)],
-   ['あのね',companion,word],
-   [word,companion,choose(tails)],
-   ['えっと',word,companion]
-  ];
+ if(group==='action'){
+  const forms=[['あのね',companion,word],[companion,word,'みて'],['えっと',companion,word]];
+  return {w:choose(forms),e:emotion,topic:group};
+ }
+ if(group==='feeling'){
+  const ending=emotion==='puzzled'?'んー':emotion==='sleepy'?'ふぁ…':emotion==='surprised'?'あれ？':'ふふ';
+  const forms=[[word,companion,ending],[companion,word,'だね'],['あのね',word,companion]];
+  return {w:choose(forms),e:emotion,topic:group};
+ }
+ if(group==='color'){
+  const forms=[[companion,word,'だね'],['みて',companion,word],[word,companion,'きれい']];
+  return {w:choose(forms),e:emotion,topic:group};
+ }
+ if(group==='shape'){
+  const forms=[['これ',word,'みて'],['あのね','これ',word],[word,'これ','すき']];
   return {w:choose(forms),e:emotion,topic:group};
  }
  const tails=(group==='food')?['すき','おいし','んま']:
@@ -2107,6 +2112,19 @@ try{
  }
 }catch{}
 showQuestion();
+// ひとりごとの履歴は一時的なもので、保存データには追加しない。
+const recentIdleLines=[];
+function freshIdlePhrase(){
+ let result=idlePhrase();
+ for(let retry=0;retry<6;retry++){
+  const signature=result.w.join('|');
+  if(!recentIdleLines.includes(signature))break;
+  result=idlePhrase();
+ }
+ recentIdleLines.push(result.w.join('|'));
+ if(recentIdleLines.length>9)recentIdleLines.shift();
+ return result;
+}
 function idlePhrase(){
  const h=new Date().getHours();
  if(st.energy<22&&Math.random()<.42)return {w:['ねむい','ふぁ…','すぅ'],e:'sleepy'};
@@ -2217,7 +2235,7 @@ function scheduleIdle(first=false){clearTimeout(autoTimer);if(asleep){scheduleDr
    if(startQuestion()){scheduleIdle();return}
   }
   if(st.solo&&Math.random()<Math.max(.28,Math.min(.60,.42+(st.temperCurious-24)*.0028-(st.temperTalk-24)*.0016))&&startSoloPlay(true))return;
-  const {w,e}=idlePhrase();speakWords(w,e);st.energy=clamp(st.energy-.7);st.curiosity=clamp(st.curiosity+1);updateMood();scheduleIdle()
+  const {w,e}=freshIdlePhrase();speakWords(w,e);st.energy=clamp(st.energy-.7);st.curiosity=clamp(st.curiosity+1);updateMood();scheduleIdle()
  },first?6400:lo+Math.random()*(hi-lo));
 }
 function resetIdle(){scheduleIdle()}
@@ -2243,61 +2261,166 @@ function pet(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clea
  const coin=useSceneCoinage('pet',.48);react(coin?.w||w,'happy','pet')}
 
 function snack(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.energy=clamp(st.energy+12);growTemper('cuddle',.7);keepExperience('event','snack');const coin=useSceneCoinage('snack',.52);react(coin?.w||choose(snackResponses),'happy','nibble')}
-function talk(text){const original=text.trim();if(!original)return;
- stopSoloPlay();
- cancelFollowUp();
+// 会話の直近の話題は短時間だけ保持する。セーブ形式・学習語数は変更しない。
+const COMMON_CHAT_KANJI={
+ '何してる':'なにしてる','何をしてる':'なにをしてる','何やってる':'なにやってる',
+ '大好き':'だいすき','好き':'すき','嫌い':'きらい','可愛い':'かわいい','嬉しい':'うれしい',
+ '悲しい':'かなしい','寂しい':'さみしい','怖い':'こわい','楽しい':'たのしい',
+ '猫':'ねこ','犬':'いぬ','兎':'うさぎ','鳥':'とり','魚':'さかな',
+ '林檎':'りんご','苺':'いちご','朝':'あさ','夜':'よる',
+ '雨':'あめ','空':'そら','雲':'くも','星':'ほし','月':'つき',
+ '家':'おうち','部屋':'おへや','ご飯':'ごはん',
+ '今日':'きょう','何':'なに','何処':'どこ','名前':'なまえ',
+ '有難う':'ありがとう','有り難う':'ありがとう','お早う':'おはよう',
+ '眠い':'ねむい','寝る':'ねる'
+};
+function chatToHira(raw){
+ let result=toHira(raw);
+ for(const [from,to] of Object.entries(COMMON_CHAT_KANJI))result=result.replaceAll(from,to);
+ return result;
+}
+let lastTalkSubject='',lastTalkSubjectAt=0;
+const recentChatChoices=[];
+function pickChatChoice(choices){
+ const fresh=choices.filter(words=>!recentChatChoices.includes(words.join('|')));
+ const picked=choose(fresh.length?fresh:choices);
+ recentChatChoices.push(picked.join('|'));
+ if(recentChatChoices.length>8)recentChatChoices.shift();
+ return picked;
+}
+function findTalkSubject(message){
+ const n=chatToHira(message);
+ const candidates=INITIAL_WORDS.filter(x=>x.word.length>=2&&
+  !['talk','time','action','feeling','color','shape'].includes(x.group)&&
+  containsSpokenWord(n,x.word));
+ // 「こねこ」と「ねこ」のような場合は長い語を優先する。
+ // 「ねこは おうちにいる」のような文は「は」の前を優先する。
+ const rank=item=>{const index=n.indexOf(item.word),after=n.slice(index+item.word.length);
+  return (/^[はがをって]/.test(after)?100:0)-index*2+item.word.length*.1;
+ };
+ candidates.sort((a,b)=>rank(b)-rank(a));
+ if(candidates.length)return candidates[0];
+ const memorized=memories.filter(m=>m.word.length>=2&&containsSpokenWord(n,m.word))
+  .sort((a,b)=>b.word.length-a.word.length)[0];
+ if(memorized)return {word:memorized.word,group:memorized.topic||'mystery'};
+ return null;
+}
+function topicReply(subject,message){
+ const word=subject.word,group=subject.group;
+ const ask=/[？?]|(?:どこ|なに|どんな|しってる|すきなの)/.test(message);
+ const dislikes=/(?:きらい|すきじゃない|すきではない|すきぢゃない|いやだ)/.test(message);
+ if(dislikes)return {w:pickChatChoice([[word,'いやなの？','そっか'],['そっか',word,'いや？']]),e:'puzzled',topic:group};
+ if(/(?:どこ|どこに|どこへ)/.test(message))return {w:pickChatChoice([[word,'どこかな','きになる'],[word,'どこだろ','んー']]),e:'puzzled',topic:group};
+ if(/(?:だいすき|すき)/.test(message)){
+  return ask?{w:pickChatChoice([[word,'すき！','えへへ'],['うん',word,'すき']]),e:'happy',topic:group}:
+   {w:pickChatChoice([[word,'すきなんだ','ふふ'],['わあ',word,'すきなんだ'],[word,'すきなんだ','えへ']]),e:'happy',topic:group};
+ }
+ if(/(?:かわいい|きれい)/.test(message))return {w:[word,'みて','きれい'],e:'happy',topic:group};
+ if(/(?:おうち|おへや|そと|おそら|こうえん)/.test(message)&&
+  /(?:いる|ある|いた|あった)/.test(message)){
+  const place=['おうち','おへや','そと','おそら','こうえん'].find(w=>message.includes(w));
+  return {w:pickChatChoice([[word,place,'いるんだ'],[place,word,'いるんだ']]),e:'happy',topic:group};
+ }
+ if(group==='food'&&/(?:あまい|おいしい|すっぱい|つめたい)/.test(message)){
+  const desc=['あまい','おいしい','すっぱい','つめたい'].find(w=>message.includes(w));
+  return ask?{w:[word,desc+'？','んー'],e:'puzzled',topic:group}:
+   {w:[word,desc+'んだ','んま'],e:'happy',topic:group};
+ }
+ if(ask)return {w:pickChatChoice([[word,'なあに？','おしえて'],['ん？',word,'きになる']]),e:'puzzled',topic:group};
+ const base=INITIAL_WORD_SET.has(word)?initialPhrase(subject):
+  phraseFromMemory(memories.find(m=>m.word===word)||{word,topic:group,hears:0,affinity:0,links:[]});
+ // 直前に話しかけられた名詞をそのまま反応に含める。
+ return {w:base.w,e:base.e,topic:group};
+}
+function talk(text){
+ const original=text.trim();if(!original)return;
+ stopSoloPlay();cancelFollowUp();
  if(tryAnswerPending(original))return;
  growTemper('talk',3.3);
- addChat('mine',original);const t=original.normalize('NFKC').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+ addChat('mine',original);
+ const t=chatToHira(original),plain=t.replace(/[\s、。！？?!]/g,'');
  const coinedMention=findCoinageIn(original);
+ const negative=/(?:きらい|すきじゃない|すきではない|すきぢゃない|いやだ)/.test(t);
+ const subject=findTalkSubject(t);
+ // 「それ」「どこ」などの続きには、直前の話題を短時間だけ使う。
+ const followSubject=!subject&&lastTalkSubject&&Date.now()-lastTalkSubjectAt<100000&&
+  /^(?:それ|これ|どこ|なに|どんな|すき|そうなの|そうなんだ|どこにいる|どこにある)/.test(plain)?
+  {word:lastTalkSubject,group:INITIAL_WORDS.find(x=>x.word===lastTalkSubject)?.group||'mystery'}:null;
  if(asleep&&!/おやすみ|ねんね|ねて/.test(t)){asleep=false;$('robotWrap').classList.remove('sleep')}
- let w,e='neutral',anim='wiggle',topic='talk';
- if(coinedMention&&!asleep){const used=useCoinage(coinedMention);w=used.w;e=used.e;topic='talk';anim='wiggle'}
- else if(/おやすみ|ねんね|ねて/.test(t)){w=['おやすみ','すぅ','またね'];e='sleepy';anim='pet';asleep=true}
- else if(/おはよう|おはよ|こんにちは|こんばんは|やっほ|はじめまして/.test(t)){w=choose([['おはよ','きた！','うれし'],['やっほ','ここだよ','えへ'],['こんにちは','いっしょ','いる！']]);e='happy';topic='talk'}
- else if(/すき|だいすき|かわいい|あいしてる|いいこ/.test(t)&&!/きらい|すきじゃない|すきではない/.test(t)){w=choose([['すき！','ぎゅっ','えへへ'],['うれし','ぽかぽか','すき'],['えへ','もっと','ぎゅー']]);e='happy';topic='love';anim='lovely';st.warmth=clamp(st.warmth+7)}
- else if(/かなしい|さみしい|さびしい|つらい|ないた|泣|こわい/.test(t)){w=choose([['だいじょぶ','ここ','いるよ'],['ぎゅっ','よしよし','いっしょ'],['しょぼん','おてて','どうぞ']]);e='puzzled';topic='love';anim='pet'}
- else if(/おやつ|たべたい|たべる|おなか|ごはん/.test(t)){w=['おなか','ぺこぺこ','ぱく'];e='happy';topic='food';anim='nibble'}
- else if(/なで|ぎゅー|だっこ|ふわふわ/.test(t)){w=['ぎゅー','あったか','すき'];e='happy';topic='love';anim='pet'}
- else if(/あか|あお|きいろ|みどり|いろ/.test(t)){w=['あか','あお','きれい'];e='happy';topic='color'}
- else if(/まる|しかく|さんかく|かたち/.test(t)){w=['まる','ころころ','すき'];e='happy';topic='shape'}
- else if(/あめ|そら|くも|はな|ほし|つき/.test(t)){w=['おそら','きらきら','みて'];e='surprised';topic='world'}
- else if(/なに|なまえ|だあれ|だれ/.test(t)||t===look.name){w=[look.name,'ここ','いるよ'];e='happy';topic='talk'}
- else if(/ありがと|ありがとう/.test(t)){w=['えへ','どういたし','まして'];e='happy';topic='love'}
- else if(/たのしい|うれしい|やった/.test(t)){w=['やった','いっしょ','うれし'];e='happy';topic='love'}
- else if(/ばいばい|またね|さよなら/.test(t)){w=['またね','ばいばい','すき'];e='happy'}
- else if(/おこ|きらい|いやだ|すきじゃない|すきではない/.test(t)){w=['あれ？','しょぼん','ごめんね'];e='puzzled'}
- else if(/なにしてる|あそぼ|あそぶ|ひま/.test(t)){w=['まる','みてた','えへ'];e='happy';topic='shape'}
- else{
+ let w,e='neutral',anim='wiggle',topic='talk',affection=false;
+ const say=(words,emotion='neutral',theme='talk',motion='wiggle')=>{
+  w=words;e=emotion;topic=theme;anim=motion;
+ };
+ // 自分に向けられたあいさつ・依頼は、単語への反応より優先する。
+ if(/おやすみ|ねんね|ねて/.test(t)){
+  say(['おやすみ','すぅ','またね'],'sleepy','sleep','pet');asleep=true;
+ }else if(/(?:おはよう|おはよ|お早う)/.test(t)){
+  say(pickChatChoice([['おはよ','きた！','うれし'],['おはよ','おきた','えへ'],['おはよ','いっしょ','いるよ']]),'happy');
+ }else if(/(?:こんばんは)/.test(t)){
+  say(pickChatChoice([['こんばんは','よる','きたね'],['やっほ','よるだ','えへ']]),'happy');
+ }else if(/(?:こんにちは|やっほ|はじめまして)/.test(t)){
+  say(pickChatChoice([['こんにちは','いっしょ','いる！'],['やっほ','ここだよ','えへ']]),'happy');
+ }else if(/(?:ありがとう|ありがと)/.test(t)){
+  say(choose([['えへへ','うれし','ふふ'],['うん！','えへへ','こちらこそ']]),'happy','love');
+ }else if(/(?:ばいばい|またね|さよなら)/.test(t)){
+  say(['ばいばい','またね','えへ'],'happy');lastTalkSubject='';
+ }else if(/(?:なにしてる|なにをしてる|なにやってる|あそぼ|あそぼう|ひまなの)/.test(t)){
+  say(choose([['まる','みてた','えへ'],['ゆらゆら','してた','ふふ'],['いっしょ','あそぶ？','ぽよ']]),'happy','talk');
+ }else if(/(?:かなしい|さみしい|さびしい|つらい|ないた|泣|こわい)/.test(t)){
+  say(choose([['ここ','いるよ','ぎゅっ'],['おてて','どうぞ','いっしょ'],['そっか','よしよし','ここだよ']]),'puzzled','love','pet');
+ }else if(/(?:おこって|おこった|やだ|いやだ)/.test(t)&&!subject){
+  say(['そっか','いやなの','うん'],'puzzled');
+ }else if(coinedMention&&!asleep){
+  const used=useCoinage(coinedMention);say(used.w,used.e,'talk');
+ }else if(subject||followSubject){
+  const entry=subject||followSubject;const result=topicReply(entry,t);
+  say(result.w,result.e,result.topic);
+ }else if(negative){
+  say(['そっか','いやなんだ','うん'],'puzzled');
+ }else if(/(?:だいすき|すき|かわいい|あいしてる|いいこ)/.test(t)){
+  say(choose([['すき！','ぎゅっ','えへへ'],['うれし','ぽかぽか','すき'],['えへ','もっと','ぎゅー']]),'happy','love','lovely');
+  st.warmth=clamp(st.warmth+7);affection=true;
+ }else if(/(?:おやつ|たべたい|たべる|おなか|ごはん)/.test(t)){
+  say(['おなか','ぺこぺこ','ぱく'],'happy','food','nibble');
+ }else if(/(?:なで|ぎゅー|だっこ|ふわふわ)/.test(t)){
+  say(['ぎゅー','あったか','すき'],'happy','love','pet');
+ }else if(/(?:あか|あお|きいろ|みどり|いろ)/.test(t)){
+  say(['いろ','きれい','みて'],'happy','color');
+ }else if(/(?:まる|しかく|さんかく|かたち)/.test(t)){
+  say(['まる','ころころ','すき'],'happy','shape');
+ }else if(/(?:あめ|そら|くも|ほし|つき)/.test(t)){
+  say(['おそら','きらきら','みて'],'surprised','world');
+ }else if(/(?:なに|なまえ|だあれ|だれ)/.test(t)||plain===look.name){
+  say([look.name,'ここ','いるよ'],'happy');
+ }else if(/(?:たのしい|うれしい|やった)/.test(t)){
+  say(['やった','いっしょ','うれし'],'happy','love');
+ }else{
   const initialMention=findInitialMention(t);
-  if(initialMention){const base=initialPhrase(initialMention);w=base.w;e=base.e;topic=initialMention.group}
-  else{w=choose([['ん？','むにゃ','なあに？'],['えっと','ぽゆぽ','ん？'],['ふしぎ','むむ','えへ'],['わかんない','でも','すき'],['ほよ？','もういっかい','いう？']]);e='puzzled';st.curiosity=clamp(st.curiosity+4)}
+  if(initialMention){const base=initialPhrase(initialMention);say(base.w,base.e,initialMention.group)}
+  else{say(choose([['ん？','もういっかい','いう？'],['えっと','わかんない','おしえて'],['ほよ？','なあに','ふしぎ']]),'puzzled');st.curiosity=clamp(st.curiosity+4)}
  }
- // 語彙を検知できる会話だけで、１ターンに１単語まで。意味のある返答を毎回上書きしない。
- const candidate=coinedMention?null:learnCandidate(original);
+ // 聞いた語の学習は、会話の主題を認識した返事を上書きしない。
+ const candidate=coinedMention?null:learnCandidate(t);
  const learned=candidate&&(!INITIAL_WORD_SET.has(candidate)||memories.some(m=>m.word===candidate))?rememberWord(candidate):null;
  if(learned?.item){
-  // すきなものを聞くと、もこ自身も少し気に入りやすくなる。
-  // きらいと言われた場合は「すき」の反応と混同しない。
-  const positive=/(?:だい)?すき|かわいい|おきにいり/.test(t)&&!/きらい|すきじゃない|すきではない/.test(t);
-  if(positive)likeWord(learned.item);
-  const talkAbout=learningReaction(learned);
-  if(/きらい|すきじゃない|すきではない/.test(t)){w=['ん…',learned.item.word,'そうなの？'];e='puzzled';anim='pet'}
-  else if(positive&&learned.level>=3){w=[learned.item.word,choose(associations(learned.item))||'ぽかぽか','すき！'];e='happy';anim='lovely'}
-  else if(learned.level<=3||learned.level===5){w=talkAbout.w;e=talkAbout.e;anim=talkAbout.anim}
-  else if(Math.random()<.55){w=talkAbout.w;e=talkAbout.e}
-  topic=learned.item.topic;
+  const liked=/(?:だい)?すき|かわいい|おきにいり/.test(t)&&!negative;
+  if(liked)likeWord(learned.item);
+  const teaching=/っていう|っていうんだよ|おぼえて|おしえる|っていうの/.test(t)||plain===candidate;
+  if(teaching&&!asleep&&!negative){
+   const reaction=learningReaction(learned);
+   w=reaction.w;e=reaction.e;anim=reaction.anim||'wiggle';topic=learned.item.topic;
+  }
  }
- // 嬉しい言葉をかけられた場面も、もこだけの言葉と少しずつ結びつく。
- if(!coinedMention&&!asleep&&/(?:だい)?すき|かわいい|いいこ|うれしい|ありがとう|ありがと|たのしい/.test(t)&&
-    !/きらい|すきじゃない|すきではない|いやだ/.test(t)){
-  const coin=useSceneCoinage('joy',.37);
+ // 自分だけの言葉は、話題と無関係に返事を上書きしない。
+ if(affection&&!coinedMention&&!asleep&&Math.random()<.22){
+  const coin=useSceneCoinage('joy',.35);
   if(coin){w=coin.w;e=coin.e;anim='lovely'}
  }
+ if(subject){lastTalkSubject=subject.word;lastTalkSubjectAt=Date.now()}
+ else if(followSubject){lastTalkSubjectAt=Date.now()}
+ else if(!/^(?:それ|これ|どこ|なに)/.test(plain)&&topic==='talk')lastTalkSubject='';
  contextTopic=topic;contextUses=2;
- // 通常会話の中で出た身近な単語も、時間がたってからぽつりと思い出す。
- if(!asleep&&topic!=='sleep'){echoFromChat(original);keepConversation(original)}
- // ねんねの ことばの あとだけ じぶんで おやすみ
+ if(!asleep&&topic!=='sleep'){echoFromChat(t);keepConversation(t)}
  st.warmth=clamp(st.warmth+2);st.energy=clamp(st.energy-1);
  speakWords(w,e);animate(anim);updateMood();store();scheduleIdle();addChat('robot',w.filter(Boolean).join('　'));
  if(asleep){$('robotWrap').classList.add('sleep');updateMood()}
@@ -3481,7 +3604,7 @@ let pendingDataAction=null;
 function allDataSnapshot(){
  tidyEchoes();
  return {
-  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.33',savedAt:new Date().toISOString(),
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.35',savedAt:new Date().toISOString(),
   state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
   appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
   coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
@@ -3589,6 +3712,7 @@ function refreshAfterFullChange(){
 function clearTransientConversation(){
  // 会話ログ全文は保存対象ではないため、別の記録を読み込んだ時は前の発言を残さない。
  $('chatLog').replaceChildren();
+ lastTalkSubject='';lastTalkSubjectAt=0;recentChatChoices.length=0;recentIdleLines.length=0;
  const greeting=document.createElement('div');greeting.className='chat-line';greeting.dataset.defaultGreeting='true';greeting.textContent='もこ　「ん？　おはなし？」';
  $('chatLog').append(greeting);
  for(const id of ['chatInput','teachInput','connectFrom','connectTo'])$(id).value='';
