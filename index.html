@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.23</title>
+<title>もこぼっと v1.5.25</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -318,6 +318,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .game-select{background:#fff;border:1px solid #dbe7e0;color:#567b6d;padding:9px 13px;border-radius:12px;font-size:16px;min-height:44px}
 .game-play-card{background:#fff;border-radius:24px;padding:15px;box-shadow:0 5px 17px rgba(47,77,69,.07);display:flex;flex-direction:column;gap:12px}
 .game-play-card .game-status{margin:0}
+/* けっかと もこの せりふを別行にして、名前の位置が分かるようにする */
+#runnerStatus,#mazeStatus{white-space:pre-line;overflow-wrap:anywhere}
 .game-play-card .maze-board-wrap{background:#f7fbf8;border-radius:20px;padding:10px}
 .game-play-card .maze-canvas{background:#ebf3e9}
 .faceoff-card{background:#fff;border-radius:24px;padding:14px 14px 16px;box-shadow:0 5px 17px rgba(47,77,69,.07)}
@@ -2642,7 +2644,7 @@ function runnerFinish(reason=""){
  gameStats.runnerStars=Math.min(1e8,gameStats.runnerStars+r.stars);
  gameStats.runnerBest=Math.max(gameStats.runnerBest,r.score);
  gameStats[bestKey('runner',r.difficulty)]=Math.max(currentBest('runner',r.difficulty),r.score);
- $('runnerStatus').textContent=(reason?reason+'  ':'')+'すすんだ '+r.score+'！ てき '+r.defeated+'たい！ '+look.name+'「もっかい とぶ？」';
+ $('runnerStatus').textContent=(reason?reason+'  ':'')+'すすんだ '+r.score+'！ てき '+r.defeated+'たい！\n'+look.name+'「もっかい とぶ？」';
  gameSuccess('runner',r.score>=80);
 }
 function runnerRectOverlap(a,b,pad=3){return a.x+a.w-pad>b.x+pad&&a.x+pad<b.x+b.w-pad&&a.y+a.h-pad>b.y+pad&&a.y+pad<b.y+b.h-pad}
@@ -3003,7 +3005,7 @@ function endMaze(won){
  gameStats.mazePlayed++;if(won)gameStats.mazeClears++;
  gameStats.mazeBest=Math.max(gameStats.mazeBest,m.score);
  gameStats[bestKey('maze',m.difficulty)]=Math.max(currentBest('maze',m.difficulty),m.score);
- $('mazeStatus').textContent=won?'ぜんぶ あつめた！ '+look.name+'「やったぁ！」':look.name+'「あれれ……もっかい？」';
+ $('mazeStatus').textContent=won?'ぜんぶ あつめた！\n'+look.name+'「やったぁ！」':'つかまっちゃった！\n'+look.name+'「あれれ……もっかい？」';
  $('mazeStart').textContent=won?'つぎの めいろ':'はじめから';
  gameSuccess('maze',won);updateMazeHUD();
 }
