@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこ v0.9.0 — ちいさな おしゃべりろぼっと</title>
+<title>もこぼっと v1.5.21</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -41,6 +41,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .robot-wrap.wiggle .robot{animation:wiggle .95s ease-in-out}
 .robot-wrap.nibble .robot{animation:nibble 1.15s ease-in-out}
 .robot-wrap.sleep .robot{animation:sleep-breathe 6.5s ease-in-out infinite}
+
+/* v1.0: ひとりあそびは既存の本体SVGを動かす。平常時の呼吸とタップ反応は維持。 */
+.robot-wrap.solo-look .robot{animation:solo-look 3s ease-in-out both}
+.robot-wrap.solo-think .robot{animation:solo-think 3s ease-in-out both}
+.robot-wrap.solo-hop .robot{animation:solo-hop 2.8s ease-in-out both}
+.robot-wrap.solo-sway .robot{animation:solo-sway 3s ease-in-out both}
+.robot-wrap.solo-stretch .robot{animation:solo-stretch 3s ease-in-out both}
+.robot-wrap.solo-peek .robot{animation:solo-peek 3s ease-in-out both}
+.robot-wrap.solo-wobble .robot{animation:solo-wobble 3s ease-in-out both}
+.robot-wrap.solo-look #eyesOpen{animation:solo-gaze 3s ease-in-out both;transform-box:fill-box;transform-origin:center}
+.robot-wrap.solo-peek #eyesOpen{animation:solo-peek-eyes 3s ease-in-out both;transform-box:fill-box;transform-origin:center}
+@keyframes solo-look{0%,100%{transform:translateX(0) rotate(0)}24%{transform:translateX(-4px) rotate(-3deg)}64%{transform:translateX(4px) rotate(3deg)}}
+@keyframes solo-gaze{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}65%{transform:translateX(5px)}}
+@keyframes solo-think{0%,100%{transform:rotate(0) scale(1)}32%,72%{transform:rotate(-5deg) scale(.99,1.015)}}
+@keyframes solo-hop{0%,100%{transform:translateY(0) scale(1)}13%{transform:scale(1.05,.94)}34%{transform:translateY(-14px) scale(.97,1.04)}48%{transform:translateY(1px) scale(1.04,.96)}64%{transform:translateY(-6px) scale(.99,1.02)}80%{transform:scale(1.01,.99)}}
+@keyframes solo-sway{0%,100%{transform:rotate(0) translateY(0)}22%{transform:rotate(-3deg) translateY(2px)}53%{transform:rotate(3deg)}76%{transform:rotate(-2deg)}}
+@keyframes solo-stretch{0%,100%{transform:scale(1)}28%,54%{transform:scale(.95,1.055) translateY(-3px)}74%{transform:scale(1.025,.985)}}
+@keyframes solo-peek{0%,100%{transform:translateX(0) rotate(0)}30%,69%{transform:translateX(9px) rotate(4deg)}}
+@keyframes solo-peek-eyes{0%,100%{transform:translateX(0)}30%,69%{transform:translateX(5px)}}
+@keyframes solo-wobble{0%,100%{transform:rotate(0) scale(1)}19%{transform:rotate(-4deg) scale(1.01,.99)}41%{transform:rotate(4deg)}62%{transform:rotate(-2deg)}80%{transform:rotate(1deg)}}
 /* リボンは左右と結び目をひとつの座標系で描く。左右別々のアニメーションによる分離を防ぐ */
 .robot-wrap .ribbon{pointer-events:none}
 .eye-open{transition:opacity .2s}.eye-closed{opacity:0;transition:opacity .2s}
@@ -51,12 +71,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .sparkle.one{left:7%;top:37%}.sparkle.two{right:5%;top:29%}.sparkle.three{left:56%;top:7%}
 .robot-wrap.lovely .sparkle{animation:spark 1.1s ease-out forwards}
 .robot-wrap.lovely .sparkle.two{animation-delay:.17s}.robot-wrap.lovely .sparkle.three{animation-delay:.32s}
-.hint{--hint-lift:0px;position:absolute;bottom:1%;left:0;right:0;text-align:center;color:#85908d;font-size:clamp(10px,2.7vw,12px);letter-spacing:.1em;pointer-events:none;opacity:.85;transform:translateY(var(--hint-lift));transition:transform .35s ease}
-.toolbar{z-index:6;position:relative;flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(5px,1.5vw,10px);padding:8px clamp(12px,3vw,24px) calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,rgba(230,231,230,.97) 25%)}
+.toolbar{z-index:6;position:relative;flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(4px,1vw,9px);padding:8px clamp(8px,2.2vw,18px) calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,rgba(230,231,230,.97) 25%)}
 #app.question-lift .thought{--thought-lift:-32px}
 #app.question-lift .robot-wrap{--robot-lift:-30px}
-#app.question-lift .hint{--hint-lift:-16px}
-@media(max-height:690px){#app.question-lift .thought{--thought-lift:-20px}#app.question-lift .robot-wrap{--robot-lift:-22px}#app.question-lift .hint{--hint-lift:-10px}}
+@media(max-height:690px){#app.question-lift .thought{--thought-lift:-20px}#app.question-lift .robot-wrap{--robot-lift:-22px}}
 
 .action{min-height:67px;border:1px solid rgba(255,255,255,.8);border-radius:23px;background:rgba(255,255,255,.75);color:#64716d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:clamp(12px,3.4vw,15px);font-weight:750;letter-spacing:.02em;box-shadow:0 4px 10px var(--shadow);transition:transform .15s,background .15s}
 .action:active{transform:translateY(2px) scale(.97);background:#fff}
@@ -95,7 +113,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}53%{transform:rotate(3deg)}74%{transform:rotate(-2deg)}}
 @keyframes nibble{0%,100%{transform:scale(1)}25%,70%{transform:scale(1.025,.974)}46%,85%{transform:scale(.99,1.015)}}
 @keyframes spark{0%{transform:translateY(10px) scale(.65);opacity:0}25%{opacity:.9}100%{opacity:0;transform:translateY(-27px) scale(1.12)}}
-@media(max-height:690px){.topbar{height:57px;padding-top:8px}.menu-button{width:50px;height:50px;border-radius:15px}.menu-button svg{width:24px;height:24px}.thought{top:2%;height:clamp(120px,22vh,160px)}.robot-wrap{width:min(77vw,285px,42vh);bottom:2%}.hint{display:none}.toolbar{padding-top:4px}.action{min-height:60px}}
+@media(max-height:690px){.topbar{height:57px;padding-top:8px}.menu-button{width:50px;height:50px;border-radius:15px}.menu-button svg{width:24px;height:24px}.thought{top:2%;height:clamp(120px,22vh,160px)}.robot-wrap{width:min(77vw,285px,42vh);bottom:2%}.toolbar{padding-top:4px}.action{min-height:60px}}
 @media(min-height:1000px){.robot-wrap{bottom:10%}}
 @media(max-width:350px){.thought{width:97%}.cloud{letter-spacing:0}.action{border-radius:17px}.toolbar{gap:4px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
@@ -130,9 +148,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .wordbook-footer{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}
 .wordbook-footer .small-btn{font-size:12px;background:#ebeeeb;color:#72857e}
 .wordbook-footer .small-btn:disabled{opacity:.45;cursor:default}
-.wordbook-backup{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-.wordbook-backup .small-btn{font-size:12px;padding:9px 10px;border:0;cursor:pointer}
-.wordbook-backup .small-btn:disabled{opacity:.45;cursor:default}
 @media(max-width:350px){.word-list{grid-template-columns:1fr}.teach-form .send{padding:0 11px}}
 
 /* v0.3 ことばの つながりと おきにいり */
@@ -172,8 +187,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .question-choices button{flex:1;min-width:60px;min-height:40px;font-size:13px}
 .question-help{display:block;margin-top:8px;color:#758d7e;font-size:12px}
 .ask-setting .small-btn{font-size:13px;white-space:nowrap;padding:10px 12px}
+#sleepButton{white-space:nowrap}
 @media(max-width:350px){.question-nudge{padding:7px 8px;gap:5px}.question-nudge button{padding:9px 7px}.question-choices.four{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* v1.1.0 もこらしさ。数値を競わせず、普段の過ごし方をやさしい言葉で伝える */
+.temper-box{border:1px solid #dce9e1;background:#f0f6f1;border-radius:17px;padding:13px 14px;margin:5px 0 13px;line-height:1.55}
+.temper-head{font-size:14px;font-weight:800;color:#52796b;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.temper-heading{font-size:16px;color:#4d8b74}
+.temper-desc{font-size:12px;color:#71887d;margin:6px 0 9px;line-height:1.7}
+.temper-rows{display:grid;grid-template-columns:1fr;gap:5px}
+.temper-row{display:flex;justify-content:space-between;align-items:center;gap:9px;font-size:12px;padding:6px 9px;border-radius:10px;background:rgba(255,255,255,.75)}
+.temper-row span:last-child{color:#538c7d;font-weight:800;text-align:right;white-space:normal}
+.temper-note{font-size:11px;color:#82958b;margin:9px 0 0;line-height:1.65}
+.temper-feedback{font-size:12px;color:#638b7a;line-height:1.5;margin:5px 0 0;min-height:0}
 /* v0.6.0 はじめての であい：キャラメイク */
 .creator[hidden]{display:none!important}
 .creator{position:absolute;z-index:60;inset:0;overflow-y:auto;overscroll-behavior:contain;background:rgba(230,231,230,.985);padding:18px 14px calc(22px + env(safe-area-inset-bottom));scrollbar-width:thin}
@@ -203,11 +229,351 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .creator-accept{width:100%;min-height:54px;background:#56a59c;color:white;border:0;border-radius:17px;font-weight:850;font-size:17px;letter-spacing:.045em;box-shadow:0 6px 12px rgba(57,124,111,.18)}
 .creator-feedback{color:#b04c60;font-size:12px;min-height:1.3em;margin:7px 2px 0}
 .look-setting .small-btn{font-size:13px;white-space:nowrap}
-.look-backup{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 14px}
-.look-backup .small-btn{padding:9px 11px;font-size:12px;background:#edf3ee}
 .look-feedback{font-size:12px;color:#6c9484;line-height:1.4;min-height:0}
 @media(max-width:350px){.creator{padding:7px 8px 15px}.creator-panel{padding:13px 12px 16px;border-radius:20px}.creator-title{font-size:21px}.creator-preview{min-height:158px;margin:9px 0}.creator-preview svg{height:133px}.creator-section{margin-bottom:9px}.color-options{gap:7px}.color-swatch{width:35px;height:35px;flex-basis:35px}}
 @media(max-height:660px){.creator-preview svg{height:130px}.creator-preview{min-height:150px;margin:8px 0}}
+
+/* v1.2 もこだけの造語。初期300語と別に保存・確認する */
+.coinage-book{padding-bottom:8px}
+.coinage-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.coinage-tile{border:1px solid #dfe9e3;background:#fff;border-radius:15px;padding:11px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.coinage-word{font-size:18px;color:#567c70;font-weight:850;overflow-wrap:anywhere;line-height:1.4}
+.coinage-source,.coinage-stage{font-size:11px;color:#81948c;line-height:1.5;overflow-wrap:anywhere}
+.coinage-stage{color:#4d9a86;font-weight:800}
+.coinage-bottom{display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;gap:5px;margin-top:auto}
+.coinage-bottom button{justify-self:end;background:#f2f7f3;color:#6c8b80;border:0;border-radius:9px;padding:7px 9px;font-size:11px;white-space:nowrap}
+.coinage-feedback{color:#668b7a;font-size:12px;line-height:1.6;margin:10px 2px 3px}
+.coinage-feeling{font-size:11px;line-height:1.65;color:#608477;background:#eef7f1;border-radius:10px;padding:6px 8px;overflow-wrap:anywhere}
+.coinage-feeling.unknown{background:#f4f6f4;color:#8b9990}
+.coinage-emotion{font-weight:800;color:#4e8672}
+.coinage-book .wordbook-info{line-height:1.7}
+@media(max-width:350px){.coinage-list{grid-template-columns:1fr}}
+
+/* 保存先を分散させず、設定画面の1か所にまとめる */
+.data-manager{background:#f4f8f5;border:1px solid #dce8e0;border-radius:20px;padding:14px 13px;margin:4px 0 17px}
+.data-manager h3{font-size:16px;color:#527a6a;margin:0 0 6px;letter-spacing:.04em}
+.data-description,.data-note{font-size:12px;color:#738c80;line-height:1.65;margin:0 0 10px}
+.data-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.data-button{min-height:45px;border:1px solid #c9dfd4;border-radius:13px;background:#fff;color:#497e6e;font-size:14px;font-weight:750;padding:10px 7px;white-space:nowrap}
+.data-button:active{background:#e3f1e9}
+.data-button.data-danger{grid-column:1/-1;color:#995d5d;border-color:#e8d1d1;background:#fff9f8}
+.data-button.data-danger:active{background:#f7ebeb}
+.data-confirm[hidden]{display:none!important}
+.data-confirm{background:#fff;border:1px solid #e4d3d0;border-radius:14px;padding:12px;margin-top:11px;color:#686f69}
+.data-confirm strong{display:block;font-size:14px;color:#895b5b}
+.data-confirm p{font-size:12px;line-height:1.7;margin:6px 0 10px}
+.data-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.data-confirm-actions .data-danger{grid-column:auto}
+.data-status{font-size:12px;line-height:1.6;color:#567d6e;margin:10px 0 0;min-height:0;overflow-wrap:anywhere}
+.data-status:empty{display:none}
+.data-note{margin:10px 0 0}
+
+/* v1.4 ちいさな おもいで：数値を競わせず、短い出来事だけ記録 */
+.keepsake-book{margin:5px 0 12px;border:1px solid #dbe9e1;background:#f1f7f2;padding:8px 12px 12px;border-radius:17px}
+.keepsake-book summary{display:flex;align-items:center;gap:8px;min-height:42px;color:#537e70;font-size:15px;font-weight:800}
+.keepsake-list{display:flex;flex-direction:column;gap:8px;margin-top:9px}
+.keepsake-item{border-radius:13px;background:white;border:1px solid #e0ebe4;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.keepsake-label{font-size:14px;color:#4d7d6e;font-weight:800;overflow-wrap:anywhere}
+.keepsake-caption{font-size:11px;line-height:1.6;color:#7b9387;overflow-wrap:anywhere}
+.keepsake-empty{color:#82978a;font-size:12px;line-height:1.7;padding:8px 2px}
+
+/* v1.5.2 もことあそぶ：対面リアクションを強化 */
+.toolbar .action{min-width:0;padding:5px 1px;font-size:clamp(10px,2.75vw,14px);letter-spacing:-.03em;border-radius:20px}
+.toolbar .action svg{width:23px;height:23px;flex:none}
+@media(max-width:350px){.toolbar .action{font-size:10px;border-radius:16px;min-height:60px}.toolbar .action svg{width:21px;height:21px}}
+.game-screen{position:absolute;inset:0;z-index:45;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;color:#60736f}
+.game-screen[hidden],.game-panel[hidden],.game-hub[hidden],.game-notice[hidden]{display:none!important}
+.game-header{flex:none;display:flex;align-items:center;gap:9px;padding:calc(10px + env(safe-area-inset-top)) 12px 9px;min-height:64px}
+.game-back,.game-close{height:43px;border-radius:15px;border:1px solid #f8fffc;background:#fff;color:#598e85;font-weight:800;white-space:nowrap;padding:0 12px;box-shadow:0 3px 9px rgba(44,75,62,.06)}
+.game-close{margin-left:auto;width:43px;padding:0;font-size:23px}
+.game-heading{font-weight:850;min-width:0;flex:1;font-size:clamp(17px,4.3vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-content{flex:1;overflow:auto;overscroll-behavior:contain;padding:6px clamp(11px,3vw,23px) calc(22px + env(safe-area-inset-bottom));scrollbar-width:thin}
+.game-hub-intro{background:#fff;border:1px solid #fbfffc;border-radius:23px;padding:16px;display:flex;gap:14px;align-items:center;box-shadow:0 4px 15px rgba(65,90,72,.055);margin-bottom:15px}
+.game-hub-avatar{width:80px;height:82px;flex:none;display:grid;place-items:center}
+.game-hub-avatar svg{width:79px;height:79px;animation:game-float 3s ease-in-out infinite}
+.game-hub-intro strong{display:block;font-size:17px;color:#547d72;margin-bottom:6px}
+.game-hub-intro p{margin:0;font-size:13px;line-height:1.55;color:#87958d}
+.game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.game-tile{border:1px solid rgba(255,255,255,.9);border-radius:23px;background:#fff;box-shadow:0 4px 15px rgba(65,90,72,.06);padding:15px 9px 13px;text-align:center;color:#627872;display:flex;flex-direction:column;align-items:center;gap:7px;min-height:156px;transition:transform .16s,background .16s}
+.game-tile:active{transform:scale(.97);background:#f6fcf9}
+.game-tile .game-tile-art{width:69px;height:65px;border-radius:22px;display:grid;place-items:center;background:#e4f4e9;color:#4f9e94;font-size:37px;font-weight:900}
+.game-tile[data-game="runner"] .game-tile-art{background:#fff0d2;color:#dfac48}
+.game-tile[data-game="maze"] .game-tile-art{background:#e4eafa;color:#859bc7}
+.game-tile[data-game="simon"] .game-tile-art{background:#f6e9f3;color:#b187b8}
+.game-tile strong{font-size:clamp(13px,3.6vw,17px);line-height:1.25}
+.game-tile small{font-size:11px;color:#8b9993;line-height:1.35}
+.game-note{font-size:12px;color:#8b9692;line-height:1.65;margin:14px 3px}
+.game-panel{max-width:570px;margin:0 auto;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.game-rule{font-size:13px;line-height:1.65;color:#7d9187;margin:0 2px}
+.game-stats{background:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:#66857b;font-weight:750;flex-wrap:wrap}
+.game-stats b{font-size:17px;color:#477e72;font-variant-numeric:tabular-nums}
+.game-main-card{background:#fff;border-radius:24px;padding:15px;box-shadow:0 5px 17px rgba(47,77,69,.07)}
+.game-mascot{width:92px;height:96px;display:grid;place-items:center;margin:0 auto}
+.game-mascot svg{width:90px;height:90px}
+.game-status{min-height:46px;background:#f0f7f2;color:#5b8678;padding:11px 13px;border-radius:17px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;font-weight:750;line-height:1.6}
+.game-actions{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap}
+.game-btn{background:#61a8a0;color:#fff;border:0;border-radius:16px;min-height:45px;padding:10px 19px;font-size:14px;font-weight:850;box-shadow:0 4px 10px rgba(75,139,120,.13)}
+.game-btn.alt{background:#edf4ee;color:#558477;box-shadow:none}
+.game-btn:disabled{opacity:.5;cursor:default}
+.game-select{background:#fff;border:1px solid #dbe7e0;color:#567b6d;padding:9px 13px;border-radius:12px;font-size:16px;min-height:44px}
+.faceoff-card{background:#fff;border-radius:24px;padding:14px 14px 16px;box-shadow:0 5px 17px rgba(47,77,69,.07)}
+.faceoff-top{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:12px}
+.faceoff-mascot{width:118px;height:120px;display:grid;place-items:center}
+.faceoff-mascot svg{width:116px;height:116px}
+.faceoff-bubble{width:100%;max-width:340px;background:#f0f7f2;color:#5b8678;padding:11px 14px;border-radius:19px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;font-weight:750;line-height:1.6;position:relative;min-height:54px}
+.faceoff-bubble::before{content:"";position:absolute;left:50%;top:-8px;transform:translateX(-50%) rotate(45deg);width:18px;height:18px;background:#f0f7f2;border-radius:4px}
+.faceoff-top{position:relative}
+.faceoff-mascot{position:relative;transform-origin:50% 80%}
+.faceoff-mascot svg{display:block;transition:transform .22s ease}
+.faceoff-mascot.thinking svg{animation:game-think 1.1s ease-in-out infinite alternate}
+.faceoff-mascot.ready svg{animation:game-ready .45s ease-in-out infinite alternate}
+.faceoff-mascot.cheer svg{animation:game-cheer .55s cubic-bezier(.2,.7,.3,1) 2}
+.faceoff-mascot.oops svg{animation:game-oops .4s ease-in-out 2}
+.faceoff-mascot.nod svg{animation:game-nod .35s ease-in-out 1}
+.faceoff-bubble[data-mood="cheer"]{background:#e4f3e9;color:#427d65}
+.faceoff-bubble[data-mood="oops"]{background:#fff0f3;color:#987080}
+.faceoff-bubble[data-mood="cheer"]::before{background:#e4f3e9}
+.faceoff-bubble[data-mood="oops"]::before{background:#fff0f3}
+.rps-hand.shaking{animation:game-rps-shake .26s ease-in-out infinite alternate}
+.rps-hand.revealed{animation:game-reveal .32s ease-out 1}
+@keyframes game-think{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes game-ready{from{transform:translateY(2px) scale(.98)}to{transform:translateY(-4px) scale(1.02)}}
+@keyframes game-cheer{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(-11px) scale(1.05,.96)}65%{transform:translateY(2px) scale(.99,1.03)}}
+@keyframes game-oops{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}70%{transform:rotate(6deg)}}
+@keyframes game-nod{0%,100%{transform:translateY(0)}50%{transform:translateY(5px) scale(1.02,.97)}}
+@keyframes game-rps-shake{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+@keyframes game-reveal{from{transform:scale(.84)}to{transform:scale(1)}}
+.faceoff-bubble strong{font-weight:850}
+.rps-view{display:flex;align-items:flex-end;justify-content:center;gap:14px;text-align:center;padding:2px 0 2px}
+.rps-side{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.rps-side label{font-size:12px;color:#789486}
+.rps-hand{font-size:clamp(42px,13vw,73px);width:min(34vw,132px);height:105px;display:grid;place-items:center;border-radius:25px;background:#eef8f0}
+.rps-side:nth-child(3) .rps-hand{background:#f6eff5}
+.rps-versus{font-size:15px;color:#a3afa6;font-weight:800;align-self:center;padding-bottom:36px}
+.rps-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rps-choices button{background:#f0f8f4;color:#56847a;border:1px solid #ddeee6;border-radius:18px;min-height:76px;font-weight:850;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;font-size:13px}
+.rps-choices button span{font-size:36px;line-height:1.2}
+.rps-choices button:disabled{opacity:.55}
+.simon-pads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:auto;max-width:390px;width:100%;padding:5px 0 8px}
+.simon-pad{height:clamp(94px,20vh,160px);border:4px solid rgba(255,255,255,.8);border-radius:27px;opacity:.72;box-shadow:inset 0 -8px 0 rgba(0,0,0,.045),0 4px 13px rgba(44,68,57,.055);transition:filter .12s,opacity .12s,transform .12s}
+.simon-pad[data-pad="0"]{background:#f2a7b7}.simon-pad[data-pad="1"]{background:#91d7cb}.simon-pad[data-pad="2"]{background:#f5d477}.simon-pad[data-pad="3"]{background:#bcb1e7}
+.simon-pad.lit{opacity:1;filter:brightness(1.18) saturate(1.4);transform:scale(1.045);box-shadow:0 0 0 5px #fff,0 0 0 8px #80b7ab}
+.simon-pad:disabled{cursor:default}
+.game-canvas{display:block;width:100%;height:auto;border-radius:22px;background:#ebf3e9;touch-action:none}
+.runner-canvas{aspect-ratio:16/9}
+.runner-legend{display:flex;flex-wrap:wrap;gap:5px 10px;justify-content:center;text-align:center;font-size:11px;line-height:1.5;color:#6b8b80;padding:2px 3px 4px}
+.runner-legend span{white-space:nowrap}
+.maze-canvas{aspect-ratio:15/13;max-width:440px;margin:auto}
+.game-control{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:4px}
+.game-control .game-btn{min-width:140px;min-height:55px}
+.runner-controls{align-items:stretch}
+.runner-controls #runnerJump{flex:1.5;min-width:0;min-height:76px;padding:12px 16px;border-radius:18px;font-size:15px;font-weight:900;line-height:1.35;display:flex;align-items:center;justify-content:center;background:#f0f8f4;color:#56847a;border:1px solid #ddeee6;box-shadow:0 4px 12px rgba(74,132,118,.08)}
+.runner-controls #runnerStart{flex:1;min-width:120px;min-height:76px;font-size:15px;border-radius:18px}
+.game-dpad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,53px);gap:4px;align-self:center;justify-content:center}
+.game-dpad button{background:#fff;border:1px solid #d3e8dc;color:#598f80;border-radius:16px;font-size:23px;font-weight:850;touch-action:manipulation}
+.game-dpad button:active{background:#dcf0e4;transform:scale(.95)}
+.game-dpad .up{grid-column:2;grid-row:1}.game-dpad .left{grid-column:1;grid-row:2}.game-dpad .right{grid-column:3;grid-row:2}.game-dpad .down{grid-column:2;grid-row:3}
+.game-dpad .center{grid-column:2;grid-row:2;display:grid;place-items:center;font-size:20px;color:#8db8a2}
+@keyframes game-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(max-width:350px){.game-header{gap:5px;padding-left:9px;padding-right:9px}.game-back{padding:0 8px}.game-hub-intro{padding:11px;gap:10px}.game-hub-avatar{width:63px}.game-hub-avatar svg{width:62px}.game-tile{min-height:137px;padding:10px 5px}.game-tile .game-tile-art{height:57px;width:61px}.game-main-card{padding:10px}.faceoff-card{padding:11px 10px 12px}.faceoff-mascot{width:82px;height:84px}.faceoff-mascot svg{width:80px;height:80px}.faceoff-bubble{font-size:12px;min-height:46px;padding:9px 11px}.faceoff-bubble::before{width:14px;height:14px;top:-7px}.rps-hand{height:83px}.game-dpad{grid-template-columns:repeat(3,53px);grid-template-rows:repeat(3,46px)}}
+@media(prefers-reduced-motion:reduce){.game-hub-avatar svg,.faceoff-mascot svg,.rps-hand{animation:none!important}}
+@media(max-height:690px){
+ .game-header{min-height:53px;padding:8px 9px}
+ .game-content{padding-top:2px}
+ .game-panel{gap:7px}
+ .faceoff-card{padding:9px 11px 11px}
+ .faceoff-top{gap:5px;margin-bottom:7px}
+ .faceoff-mascot{width:78px;height:78px}
+ .faceoff-mascot svg{width:76px;height:76px}
+ .faceoff-bubble{font-size:12px;min-height:37px;padding:7px 10px}
+ .rps-view{gap:8px}
+ .rps-hand{height:65px;font-size:40px}
+ .rps-versus{padding-bottom:20px}
+ .rps-choices button{min-height:57px;font-size:12px}
+ .rps-choices button span{font-size:26px}
+ .simon-pads{gap:8px;padding:0 0 2px}
+ .simon-pad{height:clamp(74px,15.5vh,100px);border-radius:20px}
+ .game-rule{font-size:11.5px;line-height:1.4}
+ .game-stats{padding:8px 10px;font-size:11px}
+ .game-stats b{font-size:14px}
+ .game-status{min-height:35px;font-size:12px;padding:7px}
+ .maze-canvas{max-width:265px}
+ .game-dpad{grid-template-columns:repeat(3,49px);grid-template-rows:repeat(3,41px);gap:3px}
+ .game-dpad button{border-radius:12px}
+ .game-actions{gap:6px}
+ .game-actions .game-btn{min-height:40px;padding:7px 12px}
+ .game-control .game-btn{min-width:0;flex:1;white-space:nowrap;font-size:12px;padding:8px}
+ .runner-controls{gap:8px}
+ .runner-controls #runnerJump,.runner-controls #runnerStart{min-height:62px;font-size:13px;padding:9px 10px;border-radius:16px}
+ .runner-controls #runnerJump{flex:1.45}
+}
+
+
+
+/* v1.5.10 : ジャンプボタンの押下が見てわかるフィードバック。
+   他のボタンやゲーム画面に影響しないようジャンプ専用。 */
+.runner-controls #runnerJump{
+  position:relative;
+  border:2px solid #9bcdbb;
+  border-bottom:6px solid #7db5a3;
+  background:#e8f7ee;
+  box-shadow:0 5px 0 #b7d7c8,0 9px 17px rgba(50,100,84,.15);
+  transform:translateY(0) scale(1);
+  transition:transform 70ms ease-out,background-color 70ms ease-out,
+             box-shadow 70ms ease-out,border-color 70ms ease-out;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.runner-controls #runnerJump:active,
+.runner-controls #runnerJump.is-pressed{
+  background:#a6d8c8;
+  color:#305f56;
+  border-color:#6fae9b;
+  border-bottom-width:2px;
+  box-shadow:inset 0 3px 9px rgba(41,97,80,.25),0 1px 0 #7db5a3;
+  transform:translateY(5px) scale(.975);
+}
+.runner-controls #runnerJump.jump-feedback:not(:active):not(.is-pressed){
+  animation:runner-jump-confirm .24s ease-out 1;
+}
+@keyframes runner-jump-confirm{
+  0%{background:#acdccc;transform:translateY(4px) scale(.98)}
+  44%{background:#d3f6e4;transform:translateY(-2px) scale(1.012)}
+  100%{background:#e8f7ee;transform:translateY(0) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+ .runner-controls #runnerJump.jump-feedback{animation:none!important}
+}
+
+/* v1.5.11 もぐもぐめいろ：方向キーを大きく、再挑戦を補助ボタンに */
+.game-screen.maze-mode .game-content{
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  padding-top:3px;padding-bottom:calc(8px + env(safe-area-inset-bottom));
+}
+.game-screen.maze-mode #gameMaze{
+  display:flex;flex-direction:column;flex:1 1 0;min-height:0;
+  width:100%;max-width:570px;gap:clamp(4px,1vh,9px);
+}
+.game-screen.maze-mode #gameMaze .game-rule{flex:none;font-size:clamp(11px,2.8vw,13px);line-height:1.4}
+.game-screen.maze-mode #gameMaze .game-stats{
+  flex:none;gap:4px 7px;padding:9px 10px;font-size:clamp(10px,2.8vw,12px);
+}
+.game-screen.maze-mode #gameMaze .game-stats b{font-size:clamp(13px,3.3vw,16px)}
+.game-screen.maze-mode #gameMaze .maze-board-wrap{
+  flex:1 1 0;min-height:0;min-width:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.game-screen.maze-mode #gameMaze .maze-canvas{
+  display:block;width:100%;height:100%;max-width:440px;max-height:100%;
+  min-height:0;aspect-ratio:auto;object-fit:contain;flex:0 1 auto;
+  border-radius:14px;background:transparent;
+}
+.game-screen.maze-mode #gameMaze #mazeStatus{
+  flex:none;min-height:33px;padding:6px 9px;font-size:clamp(11px,2.8vw,13px);line-height:1.35;
+}
+.game-screen.maze-mode #gameMaze .maze-controls{
+  flex:none;display:flex;flex-direction:row;align-items:center;justify-content:space-between;
+  gap:clamp(8px,2.5vw,18px);padding:0 clamp(0px,1vw,12px);
+}
+.game-screen.maze-mode #gameMaze .game-dpad{
+  display:grid;flex:none;align-self:center;gap:4px;
+  grid-template-columns:repeat(3,clamp(52px,16vw,66px));
+  grid-template-rows:repeat(3,clamp(50px,15vw,61px));
+}
+.game-screen.maze-mode #gameMaze .game-dpad button{
+  border-radius:16px;font-size:clamp(26px,7vw,31px);min-width:0;min-height:0;
+  box-shadow:0 3px 8px rgba(58,112,93,.08);
+}
+.game-screen.maze-mode #gameMaze .maze-controls .game-actions{
+  flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;
+}
+.game-screen.maze-mode #gameMaze .maze-controls #mazeStart{
+  width:100%;max-width:108px;min-height:46px;white-space:normal;
+  padding:9px 7px;line-height:1.3;font-size:clamp(12px,3vw,14px);
+  border-radius:13px;box-shadow:0 2px 7px rgba(75,139,120,.10);
+}
+@media(max-height:690px){
+ .game-screen.maze-mode #gameMaze{gap:4px}
+ .game-screen.maze-mode #gameMaze .game-rule{font-size:11px;line-height:1.35}
+ .game-screen.maze-mode #gameMaze .game-stats{padding:6px 8px}
+ .game-screen.maze-mode #gameMaze #mazeStatus{min-height:30px;padding:5px 7px}
+}
+@media(max-height:540px){
+ .game-screen.maze-mode #gameMaze .game-dpad{
+  grid-template-columns:repeat(3,clamp(47px,12vw,56px));
+  grid-template-rows:repeat(3,clamp(44px,11vw,50px));gap:3px;
+ }
+ .game-screen.maze-mode #gameMaze .maze-controls #mazeStart{min-height:44px}
+}
+
+
+/* v1.5.13: maze type notice uses the existing instruction row; keep fixed-height play layout. */
+.game-screen.maze-mode #gameMaze .maze-type{
+  display:inline-block;color:#4e9582;background:#f7fffb;border-radius:9px;
+  padding:1px 7px;font-weight:850;white-space:nowrap;
+}
+
+/* v1.5.14: 設定を目的別にまとめ、データの管理を一番下へ */
+.settings-group{margin:0 0 10px;background:#fff;border:1px solid #e0eae4;border-radius:18px;overflow:hidden;box-shadow:0 3px 9px rgba(54,87,67,.035)}
+.settings-group>summary{list-style:none;cursor:pointer;position:relative;min-height:76px;padding:15px 49px 14px 16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;user-select:none}
+.settings-group>summary::-webkit-details-marker{display:none}
+.settings-group>summary::after{content:'';position:absolute;right:20px;top:50%;width:10px;height:10px;border-right:2px solid #709b8e;border-bottom:2px solid #709b8e;transform:translateY(-70%) rotate(45deg);transition:transform .18s ease}
+.settings-group[open]>summary::after{transform:translateY(-26%) rotate(225deg)}
+.settings-group[open]>summary{background:#f1f8f4;border-bottom:1px solid #e1ebe5}
+.settings-group>summary:focus-visible{outline:3px solid #438e88;outline-offset:-3px;border-radius:16px}
+.group-title{font-weight:850;font-size:16px;line-height:1.3;color:#4d796b}
+.group-hint{font-size:12px;line-height:1.5;color:#87998f;font-weight:450}
+.settings-group-body{padding:5px 14px 14px}
+.settings-group-body>.setting:first-child{border-top:0}
+.settings-group-body>.setting{font-size:14px;gap:10px}
+.settings-group-body>.setting small{font-size:12px}
+.settings-group-body .temper-box{margin:7px 0 0}
+.settings-group-body>.wordbook,.settings-group-body>.initial-dictionary{margin-top:6px;border-top:1px solid #e4ece7}
+.settings-group-body>.keepsake-book{margin-top:8px}
+.settings-group-body>.menu-note{margin:10px 3px 0}
+.settings-group-body>.data-manager{margin:2px 0 0;padding:7px 0 0;background:transparent;border:0;border-radius:0}
+.settings-group:last-of-type{margin-bottom:8px}
+@media(max-width:350px){.settings-group>summary{min-height:70px;padding:12px 38px 12px 13px}.settings-group-body{padding:4px 11px 12px}.settings-group-body>.setting{font-size:13px}}
+
+/* v1.5.20 全体監査：縦画面の低い端末で操作ボタンが隠れないようにする */
+@media (min-height:691px) and (max-height:820px){
+  #gameSimon .simon-pad{height:clamp(76px,13vh,110px)}
+}
+@media (max-height:570px) and (orientation:portrait){
+  #gameSimon .simon-pad{height:clamp(52px,11vh,68px)}
+  #gameRps .faceoff-mascot{width:60px;height:61px}
+  #gameRps .faceoff-mascot svg{width:59px;height:59px}
+  #gameRps .faceoff-top{gap:3px;margin-bottom:4px}
+  #gameRps .rps-view{padding:0}
+  #gameRps .rps-hand{height:47px;font-size:31px}
+  #gameRps .rps-versus{padding-bottom:10px}
+  #gameRps .rps-choices button{min-height:48px}
+  #gameRps .rps-choices button span{font-size:23px}
+  #gameRps .faceoff-card{padding:7px 9px 9px}
+  #gameRps.game-panel{gap:4px}
+  #gameRps .faceoff-bubble{min-height:30px;padding:4px 8px;line-height:1.25}
+  #gameRps .game-actions{margin-top:0}
+}
+/* 横向き・低い画面では迷路を極端に縮めず、ゲーム領域内のみ縦スクロールを許す。
+   縦画面のスクロール不要な設計は維持する。 */
+@media (max-height:520px) and (orientation:landscape){
+  .game-screen.maze-mode .game-content{display:block;overflow-y:auto;overflow-x:hidden}
+  .game-screen.maze-mode #gameMaze{min-height:590px;display:flex;flex-direction:column;flex:none}
+  .game-screen.maze-mode #gameMaze .maze-board-wrap{flex:none;height:333px}
+  .game-screen.maze-mode #gameMaze .maze-canvas{
+     height:330px;width:auto;max-width:100%;max-height:330px;aspect-ratio:15/13;object-fit:contain
+  }
+}
+
+/* v1.5.21: ゲームごとの難易度を小さな選択欄で指定。縦の操作領域は増やさない */
+.difficulty-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.difficulty-row .game-rule{flex:1 1 auto;min-width:0;margin:0;line-height:1.5}
+.game-difficulty{flex:0 0 auto;display:flex;align-items:center;gap:4px;color:#628478;font-size:12px;font-weight:800;white-space:nowrap}
+.game-difficulty select{border:1px solid #d3e6db;border-radius:12px;background:#fff;color:#507e72;font-size:14px;font-weight:800;height:42px;min-width:98px;padding:5px 22px 5px 7px;max-width:116px}
+.game-difficulty select:disabled{color:#839b8d;background:#f1f4f0;opacity:.85}
+.game-difficulty select:focus-visible{outline:3px solid #6caea4;outline-offset:2px}
+@media(max-width:350px){.game-difficulty{font-size:11px}.game-difficulty select{min-width:88px;font-size:13px;height:39px;padding:4px 16px 4px 5px}.difficulty-row{gap:5px}}
+@media(max-height:690px){.game-difficulty select{height:36px}}
 </style>
 </head>
 <body>
@@ -255,7 +621,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         </g>
       </svg>
     </div>
-    <div class="hint" id="playHint">もこを たっぷしたり なぞったり してみてね</div>
   </section>
   <nav class="toolbar" id="playToolbar" aria-label="もこと あそぶ">
     <div class="question-nudge" id="questionNudge" hidden><span>もこが きいてるよ</span><button id="questionLater" type="button">あとで</button><button class="primary" id="questionAnswer" type="button">こたえる</button></div>
@@ -271,36 +636,55 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button class="action" id="chatButton" aria-label="おはなしを する">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4zM8 9h8M8 12h5"/></svg><span>おはなし</span>
     </button>
+    <button class="action" id="gamesButton" aria-label="げーむを ひらく">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 8h9c2 0 3.1 1.1 3.7 3.2l1.3 5c.6 2.7-1.6 4.1-3.5 2.6l-2.5-2.1h-7l-2.5 2.1c-1.9 1.5-4.1.1-3.5-2.6l1.3-5C4.4 9.1 5.5 8 7.5 8Z"/><path d="M7 11.5v5M4.5 14h5M15.7 12.5h.1M18 15h.1"/></svg><span>げーむ</span>
+    </button>
   </nav>
   <div class="scrim" id="scrim"></div>
-  <section class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle" aria-hidden="true">
-    <div class="sheet-head"><h2 id="menuTitle">もこの せってい</h2><button class="close" id="closeMenu" aria-label="とじる">×</button></div>
-    <div class="mood">いまの きもち　<strong id="moodLabel">ぽかぽか</strong><br><span id="moodDetail">一緒にいるだけで嬉しそうです。</span></div>
-    <div class="setting look-setting"><div><span id="lookSettingLabel">もこの みため</span><small><span id="currentPetName">もこ</span>の名前と色を変更できます。</small></div><button class="small-btn" id="editLook" type="button">みためを かえる</button></div>
-    <div class="look-backup"><button class="small-btn" id="saveLook" type="button">みためを ほぞん</button><button class="small-btn" id="loadLook" type="button">みためを よみこむ</button><input class="visually-hidden" id="loadLookFile" type="file" accept=".json,application/json" aria-label="みための きろくを よみこむ"></div>
-    <div class="look-feedback" id="lookFeedback" role="status"></div>
-    <div class="setting"><div>ひとりごと<small>操作しなくても時々おしゃべりします。オフにすると寝言も止まります。</small></div><button class="toggle" id="idleToggle" role="switch" aria-checked="true" aria-label="ひとりごと"></button></div>
-    <div class="setting"><div>おしゃべりの はやさ</div><select class="select" id="paceSelect" aria-label="おしゃべりの はやさ"><option value="slow">のんびり</option><option value="normal">ふつう</option><option value="often">たくさん</option></select></div>
-    <div class="setting"><div>ことばを おぼえる<small>もともとの300語とは別に、会話で聞いた言葉を少しずつ覚えます。</small></div><button class="toggle" id="learnToggle" role="switch" aria-checked="true" aria-label="ことばを おぼえる"></button></div>
-    <div class="setting"><div><span id="questionSettingLabel">もこからの しつもん</span><small>時々、自分から質問します。答えなくても大丈夫です。</small></div><button class="toggle" id="questionToggle" role="switch" aria-checked="true" aria-label="もこからの しつもん"></button></div>
-    <div class="setting"><div>おはなしの つづき<small>返事を聞いたあと、追加で一度だけ質問します。途中で終えることもできます。</small></div><button class="toggle" id="followToggle" role="switch" aria-checked="true" aria-label="おはなしの つづき"></button></div>
-    <div class="setting"><div>おはなしの よいん<small>さっき話した言葉を、少し時間がたってから思い出してつぶやきます。会話の全文は保存しません。</small></div><button class="toggle" id="echoToggle" role="switch" aria-checked="true" aria-label="おはなしの よいん"></button></div>
-    <div class="setting ask-setting"><div>いま きいてみる<small>その場で質問を一つ考えます。</small></div><button class="small-btn" id="askNow" type="button">きいてみて</button></div>
-    <div class="setting"><div>ねんね<small>眠っている間も、時々寝言をつぶやきます。触れると起きます。</small></div><button class="small-btn" id="sleepButton">おやすみ</button></div>
-    <details class="initial-dictionary" id="initialDictionary"><summary>はじめから しっている ことば <span class="wordbook-count" id="initialWordCount">300語</span></summary>
-      <p class="wordbook-info">身近な物・動作・気持ちなどの初期語彙です。似合う動作や様子と結びつけて、短い言葉で話します。謎の言葉と寝言の擬音は300語に含めていません。</p>
-      <div id="initialWordList" class="initial-word-list"></div>
-    </details>
-    <details class="wordbook" id="wordbook"><summary>ことばの ぽっけ <span class="wordbook-count" id="wordCount">0 / 40</span></summary>
-      <p class="wordbook-info" id="wordbookAbout">同じ言葉を繰り返し聞くと、お気に入りの言葉が増えていきます。質問への返事から、言葉同士のつながりも覚えます。</p>
-      <div class="favorite-spot" id="favoriteSpot" aria-live="polite">まだ すきな ことばを さがしてるよ。</div>
-      <div class="word-list" id="wordList" aria-live="polite"></div>
-      <div class="wordbook-footer"><span class="wordbook-info" id="wordbookTip" style="margin:0" role="status">会話から言葉を覚えます。</span><button class="small-btn" id="forgetAll" type="button">ぜんぶ わすれる</button></div>
-      <div class="wordbook-backup"><button class="small-btn" id="saveWords" type="button">ことばを ほぞん</button><button class="small-btn" id="loadWords" type="button">ことばを よみこむ</button><input type="file" id="loadWordsFile" accept=".json,application/json" class="visually-hidden" aria-label="ことばの ほぞんを よみこむ"></div>
-    </details>
-    <p class="menu-note" id="storageWarning" hidden>この開き方では自動保存を利用できないようです。「ことばの ぽっけ」の「ことばを ほぞん」から記録を保存してください。</p>
-    <p class="menu-note">覚えた言葉とつながりに加え、余韻用の短い言葉を一時保存します。余韻は一度つぶやくか、時間がたつと消えます。会話の全文は保存しません。</p>
-  </section>
+  <section aria-hidden="true" aria-labelledby="menuTitle" aria-modal="true" class="sheet" id="menuSheet" role="dialog"><div class="sheet-head"><h2 id="menuTitle">もこの せってい</h2><button aria-label="とじる" class="close" id="closeMenu">×</button></div><div class="mood">いまの きもち　<strong id="moodLabel">ぽかぽか</strong><br/><span id="moodDetail">一緒にいるだけで嬉しそうです。</span></div><details class="settings-group" id="settingsProfile"><summary><span class="group-title">もこのこと</span><small class="group-hint">名前・色、育った性格を見る</small></summary><div class="settings-group-body"><div class="setting look-setting"><div><span id="lookSettingLabel">もこの みため</span><small><span id="currentPetName">もこ</span>の名前と色を変更できます。</small></div><button class="small-btn" id="editLook" type="button">みためを かえる</button></div><section aria-labelledby="temperHeading" class="temper-box">
+  <div class="temper-head"><span id="temperHeading">もこらしさ</span><strong class="temper-heading" id="temperLead">のんびりや</strong></div>
+  <p class="temper-desc" id="temperDescription">一緒に過ごすうちに、少しずつ好きなことが増えていきます。</p>
+  <div class="temper-rows">
+  <div class="temper-row"><span>おはなし</span><span id="temperTalkLabel">これから</span></div>
+  <div class="temper-row"><span>なでなで</span><span id="temperCuddleLabel">これから</span></div>
+  <div class="temper-row"><span>ひとりあそび</span><span id="temperCuriousLabel">これから</span></div>
+  </div>
+  <p class="temper-note">接し方によって、話し方やひとりあそびの好みがゆっくり変わります。遊ばない日があっても減りません。</p>
+  </section></div></details><details class="settings-group" id="settingsEveryday"><summary><span class="group-title">いつものすごしかた</span><small class="group-hint">ひとりごと・ひとりあそび・ねんね</small></summary><div class="settings-group-body"><div class="setting"><div>ひとりごと<small>操作しなくても時々おしゃべりします。オフにすると寝言も止まります。</small></div><button aria-checked="true" aria-label="ひとりごと" class="toggle" id="idleToggle" role="switch"></button></div><div class="setting"><div>おしゃべりの はやさ</div><select aria-label="おしゃべりの はやさ" class="select" id="paceSelect"><option value="slow">のんびり</option><option value="normal">ふつう</option><option value="often">たくさん</option></select></div><div class="setting"><div>ひとりあそび<small>何もしていないとき、ひとりで動いたり考えたりします。ひとりごとがオフの場合は、声を出さずに動きます。</small></div><button aria-checked="true" aria-label="ひとりあそび" class="toggle" id="soloToggle" role="switch"></button></div><div class="setting ask-setting"><div>ちょっと みる<small>もこの小さなひとりあそびを、今すぐ見ることができます。</small></div><button class="small-btn" id="soloNow" type="button">みてみる</button></div><div class="setting ask-setting"><div>ねんね<small>眠っている間も、時々寝言をつぶやきます。触れると起きます。</small></div><button class="small-btn" id="sleepButton" type="button">おやすみ</button></div></div></details><details class="settings-group" id="settingsChat"><summary><span class="group-title">おはなしの設定</span><small class="group-hint">言葉の学習・質問・造語を調整する</small></summary><div class="settings-group-body"><div class="setting"><div>ことばを おぼえる<small>もともとの300語とは別に、会話で聞いた言葉を少しずつ覚えます。</small></div><button aria-checked="true" aria-label="ことばを おぼえる" class="toggle" id="learnToggle" role="switch"></button></div><div class="setting"><div><span id="questionSettingLabel">もこからの しつもん</span><small>時々、もこが自分から質問します。答えなくても大丈夫です。</small></div><button aria-checked="true" aria-label="もこからの しつもん" class="toggle" id="questionToggle" role="switch"></button></div><div class="setting"><div>おはなしの つづき<small>返事を聞いたあと、追加で一度だけ質問します。途中で終えることもできます。</small></div><button aria-checked="true" aria-label="おはなしの つづき" class="toggle" id="followToggle" role="switch"></button></div><div class="setting ask-setting"><div>いま きいてみる<small>その場で質問を一つ考えます。</small></div><button class="small-btn" id="askNow" type="button">きいてみて</button></div><div class="setting"><div>おはなしの よいん<small>さっき話した言葉を、少し時間がたってから思い出してつぶやきます。会話の全文は保存しません。</small></div><button aria-checked="true" aria-label="おはなしの よいん" class="toggle" id="echoToggle" role="switch"></button></div><div class="setting"><div>じぶんの ことば<small>知っている言葉の音を混ぜて造語を作ります。同じ気持ちや出来事のときに繰り返し使うと、その言葉らしい意味が育ちます。</small></div><button aria-checked="true" aria-label="じぶんの ことば" class="toggle" id="coinToggle" role="switch"></button></div><div class="setting ask-setting"><div>ことばの ひらめき<small>新しい言葉を一つ作ってみます。すでにいっぱいのときは、好きな言葉を言います。</small></div><button class="small-btn" id="coinNow" type="button">いってみる</button></div></div></details><details class="settings-group" id="settingsRecords"><summary><span class="group-title">ことばとおもいで</span><small class="group-hint">言葉帳・思い出帳・初期300語を見る</small></summary><div class="settings-group-body"><details class="wordbook" id="wordbook"><summary>ことばの ぽっけ <span class="wordbook-count" id="wordCount">0 / 40</span></summary>
+  <p class="wordbook-info" id="wordbookAbout">同じ言葉を繰り返し聞くと、お気に入りの言葉が増えていきます。質問への返事から、言葉同士のつながりも覚えます。</p>
+  <div aria-live="polite" class="favorite-spot" id="favoriteSpot">まだ すきな ことばを さがしてるよ。</div>
+  <div aria-live="polite" class="word-list" id="wordList"></div>
+  <div class="wordbook-footer"><span class="wordbook-info" id="wordbookTip" role="status" style="margin:0">会話から言葉を覚えます。</span></div>
+  </details><details class="coinage-book wordbook" id="coinageBook">
+  <summary><span id="coinageTitle">もこだけの ことば</span><span class="wordbook-count" id="coinCount">0 / 24</span></summary>
+  <p class="wordbook-info">もこが生み出した造語です。なでなでやおやつなど、同じ場面で何度も使ううちに、もこなりの気持ちが結びつきます。意味は最初から決まっていません。初期300語や教わった言葉とは別に記録します。</p>
+  <div aria-live="polite" class="coinage-list" id="coinageList"></div>
+  <p class="coinage-feedback" id="coinageFeedback" role="status">言葉ができたら、なでなでやおやつで遊んでみてね。</p>
+  </details><div class="setting"><div>ちいさな おもいで<small>何度も話した言葉や触れ合いを覚え、別の日にもふと思い出します。会話の全文は保存しません。</small></div><button aria-checked="true" aria-label="ちいさな おもいで" class="toggle" id="keepsakeToggle" role="switch"></button></div><details class="keepsake-book wordbook" id="keepsakeBook">
+  <summary><span>ちいさな おもいで</span><span class="wordbook-count" id="keepsakeCount">0 / 12</span></summary>
+  <p class="wordbook-info">何度か繰り返した出来事や言葉を、短い思い出として残します。思い出すのは時々で、何日遊ばなくても減りません。保存・読み込み・初期化は一番下の「データの管理」にまとめています。</p>
+  <div aria-live="polite" class="keepsake-list" id="keepsakeList"></div>
+  </details><details class="initial-dictionary" id="initialDictionary"><summary>はじめから しっている ことば <span class="wordbook-count" id="initialWordCount">300語</span></summary>
+  <p class="wordbook-info">身近な物・動作・気持ちなどの初期語彙です。似合う動作や様子と結びつけて、短い言葉で話します。謎の言葉と寝言の擬音は300語に含めていません。</p>
+  <div class="initial-word-list" id="initialWordList"></div>
+  </details><p class="menu-note">覚えた言葉に加え、余韻は短時間だけ、大切な思い出は長く記録します。どちらも会話の全文は保存しません。</p></div></details><details class="settings-group" id="settingsData"><summary><span class="group-title">データの管理</span><small class="group-hint">すべて保存・読み込む・初期化</small></summary><div class="settings-group-body"><section aria-labelledby="dataManagerHeading" class="data-manager">
+  <h3 class="visually-hidden" id="dataManagerHeading">データの管理</h3>
+  <p class="data-description">名前・見た目・性格・覚えた言葉・思い出・ゲームの記録・設定を、まとめて保存・読み込みできます。</p>
+  <div class="data-actions">
+  <button class="data-button" id="saveAll" type="button">すべて保存</button>
+  <button class="data-button" id="loadAll" type="button">読み込む</button>
+  <button class="data-button data-danger" id="resetAll" type="button">初期化</button>
+  </div>
+  <input accept=".json,application/json" aria-label="もこの全データを読み込む" class="visually-hidden" id="loadAllFile" type="file"/>
+  <div aria-labelledby="dataConfirmTitle" class="data-confirm" hidden="" id="dataConfirm" role="group">
+  <strong id="dataConfirmTitle"></strong>
+  <p id="dataConfirmMessage"></p>
+  <div class="data-confirm-actions"><button class="data-button" id="dataCancel" type="button">やめる</button><button class="data-button data-danger" id="dataProceed" type="button">実行する</button></div>
+  </div>
+  <p aria-live="polite" class="data-status" id="dataStatus" role="status"></p>
+  <p class="data-note">通常は自動保存されます。会話の全文は保存しません。読み込みと初期化は、今のデータを置き換えます。</p>
+  <p class="data-note" hidden="" id="storageWarning">この開き方では自動保存が使えません。定期的に「すべて保存」でファイルを残してください。</p>
+  </section></div></details></section>
   <section class="sheet" id="chatSheet" role="dialog" aria-modal="true" aria-labelledby="chatTitle" aria-hidden="true">
     <div class="sheet-head"><h2 id="chatTitle">もこと おはなし</h2><button class="close" id="closeChat" aria-label="とじる">×</button></div>
     <div class="question-card" id="questionCard" hidden aria-live="polite"><span id="questionHeading">もこの しつもん</span><strong id="questionText"></strong><div class="question-choices" id="questionChoices" aria-label="しつもんに こたえる"></div><span class="question-help" id="questionHelp">じぶんの ことばで こたえても いいよ。</span></div>
@@ -327,6 +711,71 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     </div>
     <p class="menu-note" id="chatAbout">もこから しつもんすることも あるよ。こたえを きいて、もうひとつだけ たずねることも。こたえなくても だいじょうぶ。ことばは この たんまつに きろくするよ。</p>
   </section>
+  <!-- v1.5 もこの あそびば：ゲーム中はホームを隠さず上に表示 -->
+  <section id="gameScreen" class="game-screen" role="dialog" aria-modal="true" aria-labelledby="gameHeading" hidden>
+    <header class="game-header">
+      <button id="gameBack" class="game-back" type="button">もどる</button>
+      <div class="game-heading" id="gameHeading">もこの あそびば</div>
+      <button id="gameClose" class="game-close" type="button" aria-label="げーむを とじる">×</button>
+    </header>
+    <div class="game-content" id="gameContent">
+      <div id="gameHub" class="game-hub">
+        <div class="game-hub-intro"><div id="gameHubAvatar" class="game-hub-avatar"></div><div><strong id="gameWelcome">いっしょに あそぼ！</strong><p>すきな あそびを えらんでね。<br>いつでも やめられるよ。</p></div></div>
+        <div class="game-grid">
+          <button class="game-tile" type="button" data-game="rps"><span class="game-tile-art" aria-hidden="true">✊</span><strong id="hubRpsName">もこと じゃんけん</strong><small id="hubRps">たいせんして あそぶ</small></button>
+          <button class="game-tile" type="button" data-game="simon"><span class="game-tile-art" aria-hidden="true">◌</span><strong id="hubSimonName">もこの まねっこ</strong><small id="hubSimon">いろを おぼえる</small></button>
+          <button class="game-tile" type="button" data-game="runner"><span class="game-tile-art" aria-hidden="true">✦</span><strong>もこもこ じゃんぷ</strong><small id="hubRunner">ぽよんと とぼう</small></button>
+          <button class="game-tile" type="button" data-game="maze"><span class="game-tile-art" aria-hidden="true">◉</span><strong>もぐもぐ めいろ</strong><small id="hubMaze">ぽよだまを あつめる</small></button>
+        </div>
+        <p class="game-note">あそんだ記録は、いつもの「すべて保存」に入るよ。まけても きらいに ならないよ。</p>
+      </div>
+      <div id="gameRps" class="game-panel" hidden>
+        <p class="game-rule">ぐー・ちょき・ぱーを えらんでね。もこと むかいあって あそぼう。あいこは やりなおし！</p>
+        <div class="game-stats"><span>しょうぶ <b id="rpsRound">0 / 3</b></span><span>あなた <b id="rpsYou">0</b>　<small>ー</small>　<b id="rpsMoko">0</b> <span id="rpsName">もこ</span></span></div>
+        <div class="faceoff-card">
+          <div class="faceoff-top">
+            <div id="rpsMascot" class="faceoff-mascot" aria-hidden="true"></div>
+            <div id="rpsStatus" class="faceoff-bubble" aria-live="polite">どれを だす？</div>
+          </div>
+          <div class="rps-view"><div class="rps-side"><label>あなた</label><div id="rpsYourHand" class="rps-hand">❔</div></div><span class="rps-versus">vs</span><div class="rps-side"><label id="rpsPlayerName">もこ</label><div id="rpsTheirHand" class="rps-hand">❔</div></div></div>
+          <div class="rps-choices" style="margin-top:12px"><button type="button" data-rps="0"><span>✊</span>ぐー</button><button type="button" data-rps="1"><span>✌️</span>ちょき</button><button type="button" data-rps="2"><span>✋</span>ぱー</button></div>
+        </div>
+        <div class="game-actions"><label for="rpsLength">しょうぶの かず</label><select id="rpsLength" class="game-select"><option value="1">1かい</option><option value="3" selected>3ぼん</option><option value="5">5ほん</option></select><button id="rpsRestart" class="game-btn" type="button">はじめから</button></div>
+      </div>
+      <div id="gameSimon" class="game-panel" hidden>
+        <p class="game-rule">ひかった いろの じゅんばんを おぼえて、もこの まねを してね。</p>
+        <div class="game-stats"><span>いま <b id="simonLevel">0</b> こ</span><span>さいこう <b id="simonBest">0</b> こ</span></div>
+        <div class="faceoff-card">
+          <div class="faceoff-top">
+            <div id="simonMascot" class="faceoff-mascot" aria-hidden="true"></div>
+            <div class="faceoff-bubble" id="simonStatus" aria-live="polite">「はじめる」を おしてね</div>
+          </div>
+          <div class="simon-pads" id="simonPads"><button class="simon-pad" data-pad="0" aria-label="ももいろ" type="button"></button><button class="simon-pad" data-pad="1" aria-label="みどり" type="button"></button><button class="simon-pad" data-pad="2" aria-label="きいろ" type="button"></button><button class="simon-pad" data-pad="3" aria-label="むらさき" type="button"></button></div>
+        </div>
+        <div class="game-actions"><button id="simonStart" class="game-btn" type="button">はじめる</button></div>
+      </div>
+      <div id="gameRunner" class="game-panel" hidden>
+        <div class="difficulty-row"><p class="game-rule">タップで 2だんジャンプ！ てきを よけて、ふんで たおそう。</p><label class="game-difficulty">むずかしさ <select id="runnerDifficulty" aria-label="じゃんぷの むずかしさ"><option value="easy">かんたん</option><option value="normal" selected>ふつう</option><option value="hard">むずかしい</option></select></label></div>
+        <div class="game-stats"><span>すすんだ <b id="runnerScore">0</b></span><span>✦ <b id="runnerStars">0</b></span><span>へんしん <b id="runnerPower">なし</b></span><span>さいこう <b id="runnerBest">0</b></span></div>
+        <canvas id="runnerCanvas" class="game-canvas runner-canvas" width="640" height="360" aria-label="もこもこ じゃんぷの ゲームがめん。タップでジャンプ"></canvas>
+        <div id="runnerStatus" class="game-status" aria-live="polite">はじめると もこが すすむよ</div>
+        <div class="game-control runner-controls"><button id="runnerJump" class="game-btn alt" type="button">ぽよん！ じゃんぷ</button><button id="runnerStart" class="game-btn" type="button">はじめる</button></div>
+        <div class="runner-legend"><span>📖 ほん：じどうで うつ</span><span>🚲 ばいく：はやい・むてき</span><span>🧊 れいぞうこ：おおきい・むてき</span><span>● てきの たま：むてきなら へいき</span></div>
+      </div>
+      <div id="gameMaze" class="game-panel" hidden>
+        <div class="difficulty-row"><p class="game-rule"><strong id="mazeType" class="maze-type">くねくね</strong>　ぽよだまを あつめよう。</p><label class="game-difficulty">むずかしさ <select id="mazeDifficulty" aria-label="めいろの むずかしさ"><option value="easy">かんたん</option><option value="normal" selected>ふつう</option><option value="hard">むずかしい</option></select></label></div>
+        <div class="game-stats"><span>のこり <b id="mazeRemain">0</b></span><span>♡ <b id="mazeLives">3</b></span><span>てんすう <b id="mazeScore">0</b></span><span>さいこう <b id="mazeBest">0</b></span></div>
+        <div class="maze-board-wrap"><canvas id="mazeCanvas" class="game-canvas maze-canvas" width="450" height="390" aria-label="もぐもぐめいろの ゲームばん。スワイプで移動"></canvas></div>
+        <div id="mazeStatus" class="game-status" aria-live="polite">ぽよだまを さがそう</div>
+        <div class="maze-controls">
+          <div class="game-dpad" aria-label="めいろの いどう">
+            <button type="button" class="up" data-dir="up" aria-label="うえ">↑</button><button type="button" class="left" data-dir="left" aria-label="ひだり">←</button><span class="center" aria-hidden="true">●</span><button type="button" class="right" data-dir="right" aria-label="みぎ">→</button><button type="button" class="down" data-dir="down" aria-label="した">↓</button>
+          </div>
+          <div class="game-actions"><button id="mazeStart" type="button" class="game-btn">はじめる</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
   <section class="creator" id="creator" role="dialog" aria-modal="true" aria-labelledby="creatorTitle" hidden>
     <div class="creator-panel">
       <div class="creator-head"><div><p class="creator-kicker">ちいさな であい</p><h2 class="creator-title" id="creatorTitle">はじめまして。</h2></div><button id="creatorClose" class="creator-close" type="button" aria-label="へんこうを やめる" hidden>×</button></div>
@@ -351,7 +800,7 @@ const KEY='moko_toy_v1';
 const WORD_KEY='moko_words_v1';
 let wordStorageOK=false;
 try{localStorage.setItem('moko_storage_check','ok');wordStorageOK=localStorage.getItem('moko_storage_check')==='ok';localStorage.removeItem('moko_storage_check')}catch{}
-const defaults={warmth:48,energy:77,curiosity:65,pokes:0,pets:0,visits:0,idle:true,pace:'normal',learn:true,questions:true,followUp:true,echo:true,lastSeen:0};
+const defaults={warmth:48,energy:77,curiosity:65,pokes:0,pets:0,visits:0,idle:true,solo:true,keepsakes:true,pace:'normal',runnerDifficulty:'normal',mazeDifficulty:'normal',learn:true,questions:true,followUp:true,echo:true,coinages:true,temperTalk:24,temperCuddle:24,temperCurious:24,lastSeen:0};
 let saved={};
 try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch{}
 const st={...defaults,...saved};
@@ -360,7 +809,7 @@ delete st.voice; // 旧版の音声設定は使用しない
 const LOOK_KEY='moko_look_v1';
 const PALETTES={
  body:[['わかば','#9bd612'],['さくら','#f6b7c7'],['みずいろ','#8bd3e8'],['くりーむ','#f6dfa3'],['らべんだー','#b4a5e5'],['もも','#f9aa86'],['みんと','#83d6aa'],['しろ','#f3f3ed'],['ぶどう','#ad79be'],['あか','#f28c82']],
- eyes:[['こけ','#627b2c'],['こげちゃ','#665343'],['くろ','#424952'],['こいあお','#36577f'],['むらさき','#65547f'],['もり','#336b5a'],['べに','#963e57'],['あおみどり','#286d74']],
+ eyes:[['こけ','#627b2c'],['こげちゃ','#665343'],['くろ','#424952'],['こいあお','#36577f'],['むらさき','#65547f'],['もり','#336b5a'],['べに','#963e57'],['あおみどり','#286d74'],['あいぼりー','#f5f1df']],
  ribbon:[['れもん','#ffff05'],['いちご','#fa78a1'],['さくら','#ffc5da'],['あか','#ef7167'],['みずいろ','#78cdec'],['らべんだー','#baa0ee'],['おれんじ','#ffb65f'],['みんと','#81d9ae'],['しろ','#f5f1df'],['もも','#ffa993']]
 };
 const DEFAULT_LOOK={name:'もこ',body:'#9bd612',eyes:'#627b2c',ribbon:'#ffff05',created:false};
@@ -383,9 +832,18 @@ function paintRobot(svg,appearance){
  const target=id=>svg.querySelector('#'+id+',[data-pid="'+id+'"]');
  const body=target('body'),eyesOpen=target('eyesOpen'),eyesClosed=target('eyesClosed'),mouth=target('mouth');
  if(body)body.setAttribute('fill',appearance.body);
- if(eyesOpen)eyesOpen.setAttribute('fill',appearance.eyes);
+ if(eyesOpen){
+  // 目の色はどのカラーも同じ扱い。アイボリーも縁取りしない。
+  eyesOpen.setAttribute('fill',appearance.eyes);
+  eyesOpen.setAttribute('stroke','none');
+  eyesOpen.setAttribute('stroke-width','0');
+ }
  if(eyesClosed)eyesClosed.setAttribute('stroke',appearance.eyes);
- if(mouth){mouth.setAttribute('stroke',appearance.eyes);if(mouth.getAttribute('fill')!=='none')mouth.setAttribute('fill',appearance.eyes)}
+ if(mouth){
+  // 口の色は目と完全に共通。アイボリーだけ濃くする例外を設けない。
+  mouth.setAttribute('stroke',appearance.eyes);
+  if(mouth.getAttribute('fill')!=='none')mouth.setAttribute('fill',appearance.eyes);
+ }
  const ribbon=target('ribbon');
  if(ribbon){for(const el of ribbon.querySelectorAll('*')){
   if(!el.dataset.fillShade){const f=el.getAttribute('fill');if(f==='#ffff05')el.dataset.fillShade='base';else if(f==='#fbef4a')el.dataset.fillShade='light'}
@@ -397,12 +855,12 @@ function paintRobot(svg,appearance){
 }
 function syncPetIdentity(){
  $('currentPetName').textContent=look.name;
- $('playHint').textContent=look.name+'を たっぷしたり なぞったり してみてね';
  $('playStage').setAttribute('aria-label',look.name+'と いっしょに すごす ばしょ');
  $('playToolbar').setAttribute('aria-label',look.name+'と あそぶ');
  $('thought').setAttribute('aria-label',look.name+'の ことば');
  $('lookSettingLabel').textContent=look.name+'の みため';
  $('questionSettingLabel').textContent=look.name+'からの しつもん';
+ $('coinageTitle').textContent=look.name+'だけの ことば';
  $('questionToggle').setAttribute('aria-label',look.name+'からの しつもん');
  $('wordbookAbout').textContent='同じ言葉を繰り返し聞くと、お気に入りの言葉が増えていきます。'+look.name+'が質問したときの返事からも、言葉同士のつながりを覚えます。';
  $('chatInputLabel').textContent=look.name+'に はなしかける';
@@ -417,6 +875,10 @@ function syncPetIdentity(){
 }
 
 for(const k of ['warmth','energy','curiosity'])st[k]=Math.max(0,Math.min(100,Number(st[k])||defaults[k]));
+// 旧セーブを壊さない。新しい3項目は未設定ならまっさらな状態から始まる。
+for(const k of ['temperTalk','temperCuddle','temperCurious']){
+ const v=Number(st[k]);st[k]=Number.isFinite(v)?Math.max(0,Math.min(90,v)):24;
+}
 const now=Date.now();
 if(st.lastSeen&&now-st.lastSeen>3600000)st.energy=Math.min(100,st.energy+18);
 st.visits+=1;st.lastSeen=now;
@@ -436,6 +898,51 @@ const moodData=()=>{
  return ['のんびり','自分のペースで過ごしています。'];
 };
 function updateMood(){const [label,detail]=moodData();$('moodLabel').textContent=label;$('moodDetail').textContent=detail}
+// もこらしさは固定タイプでもレベルでもなく、接し方で変わる行動の傾向。
+// 催促やログイン日数の罰則はなく、数値は保存しても画面では競わせない。
+const TEMPER_FIELDS={talk:'temperTalk',cuddle:'temperCuddle',curious:'temperCurious'};
+function temperStage(v){return v>=58?'だいすき':v>=40?'すき':v>=29?'きになってる':'これから'}
+function temperament(){
+ const choices=[
+  {key:'temperTalk',label:'おしゃべり好き',detail:'話しかけると、嬉しそうにあれこれ言葉をつなげます。'},
+  {key:'temperCuddle',label:'あまえんぼう',detail:'なでなでが好きで、ふれあうと何度も嬉しそうにします。'},
+  {key:'temperCurious',label:'たんけん好き',detail:'ひとりでも小さな発見をして、あちこち気になります。'}
+ ];
+ choices.sort((a,b)=>st[b.key]-st[a.key]);
+ const first=choices[0],second=choices[1];
+ if(st[first.key]<40)return ['のんびりや','今は何に夢中になるのか、少しずつ探しているところです。'];
+ if(st[second.key]>=48&&Math.abs(st[first.key]-st[second.key])<=9){
+  const labels={temperTalk:'おしゃべり',temperCuddle:'なでなで',temperCurious:'たんけん'};
+  return ['すきが ふたつ',labels[first.key]+'と'+labels[second.key]+'が、どちらも好きみたいです。'];
+ }
+ return [first.label,first.detail];
+}
+function updateTemperament(){
+ const [title,description]=temperament();
+ $('temperLead').textContent=title;$('temperDescription').textContent=description;
+ $('temperTalkLabel').textContent=temperStage(st.temperTalk);
+ $('temperCuddleLabel').textContent=temperStage(st.temperCuddle);
+ $('temperCuriousLabel').textContent=temperStage(st.temperCurious);
+}
+function growTemper(kind,amount){
+ const key=TEMPER_FIELDS[kind];if(!key)return;
+ // よく育った特性も、変化が止まりきらない程度の緩やかな上限を設ける。
+ const old=st[key],step=old>=68?amount*.38:old>=52?amount*.66:amount;
+ st[key]=Math.min(90,old+step);
+ updateTemperament();store();
+}
+function soloScenePick(pool){
+ const curious=Math.max(0,st.temperCurious-24)/8;
+ const cuddle=Math.max(0,st.temperCuddle-24)/12;
+ const talk=Math.max(0,st.temperTalk-24)/12;
+ const curiousIDs=new Set(['さがしもの','ふしぎなおと','かくれんぼ','ころころのそうぞう']);
+ const cuddlyIDs=new Set(['うれしいゆれ','のびのび']);
+ const talkyIDs=new Set(['ひとりでうた','ふしぎなおと']);
+ const weighted=pool.map(scene=>({scene,weight:4+(curiousIDs.has(scene.id)?curious:0)+(cuddlyIDs.has(scene.id)?cuddle:0)+(talkyIDs.has(scene.id)?talk:0)}));
+ let r=Math.random()*weighted.reduce((sum,x)=>sum+x.weight,0);
+ for(const x of weighted){r-=x.weight;if(r<0)return x.scene}
+ return weighted[weighted.length-1].scene;
+}
 function updateFace(expression){
  const eyes=$('eyesOpen'),mouth=$('mouth');
  const paths={
@@ -457,6 +964,60 @@ function animate(kind){
  el.classList.add(kind);
  clearTimeout(reactionTimer);
  reactionTimer=setTimeout(()=>el.classList.remove('squish','pet','wiggle','nibble','lovely'),1320)
+}
+// v1.0: 眺めているだけで起こる小さな出来事。二場面で、動きと言葉を対応させる。
+// 操作・質問・ねんね・画面非表示に切り替わったら、途中でも中断する。
+const SOLO_MOVES=['solo-look','solo-think','solo-hop','solo-sway','solo-stretch','solo-peek','solo-wobble'];
+const SOLO_SCENES=[
+ {id:'さがしもの',steps:[
+  {move:'solo-look',w:['ん？','あっち','こっち'],e:'puzzled'},
+  {move:'solo-think',w:['あれ？','わすれた','えへ'],e:'happy'}]},
+ {id:'ちいさなじゃんぷ',steps:[
+  {move:'solo-wobble',w:['よいしょ','よいしょ','んー'],e:'neutral'},
+  {move:'solo-hop',w:['ぴょん！','できた','えへへ'],e:'happy'}]},
+ {id:'ふしぎなおと',steps:[
+  {move:'solo-think',w:['しー','おと','きこえた？'],e:'puzzled'},
+  {move:'solo-peek',w:['ぽこっ','ぽよぽ','んふ'],e:'happy'}]},
+ {id:'ひとりでうた',steps:[
+  {move:'solo-sway',w:['ゆらゆら','ふんふん','ららら'],e:'happy'},
+  {move:'solo-hop',w:['とんとん','たのし','えへ'],e:'happy'}]},
+ {id:'のびのび',steps:[
+  {move:'solo-stretch',w:['のびー','うーん','ふぁ'],e:'neutral'},
+  {move:'solo-sway',w:['ほわぁ','ぽかぽか','ふふ'],e:'happy'}]},
+ {id:'かくれんぼ',steps:[
+  {move:'solo-peek',w:['ちらっ','そーっと','ん？'],e:'puzzled'},
+  {move:'solo-wobble',w:['みーつけ','えへへ','ぽよ'],e:'happy'}]},
+ {id:'ころころのそうぞう',steps:[
+  {move:'solo-look',w:['まる','ころころ','まてー'],e:'happy'},
+  {move:'solo-think',w:['あれ？','どこいった','むむ'],e:'puzzled'}]},
+ {id:'うれしいゆれ',steps:[
+  {move:'solo-sway',w:['あのね','ここ','すき'],e:'happy'},
+  {move:'solo-stretch',w:['ふわふわ','ぽよん','ふふ'],e:'happy'}]}
+];
+let soloTimer=0,soloVersion=0,soloActive=false,lastSoloId='';
+function stopSoloPlay(){
+ soloVersion++;clearTimeout(soloTimer);soloTimer=0;soloActive=false;
+ const el=$('robotWrap');el.classList.remove(...SOLO_MOVES);delete el.dataset.soloScene;
+}
+function startSoloPlay(speak=st.idle){
+ if(!st.solo||asleep||pendingQuestion||openSheet||document.hidden||!$('creator').hidden)return false;
+ stopSoloPlay();
+ const pool=SOLO_SCENES.filter(s=>s.id!==lastSoloId);
+ const scene=soloScenePick(pool.length?pool:SOLO_SCENES);lastSoloId=scene.id;
+ const token=soloVersion;soloActive=true;
+ const el=$('robotWrap');el.dataset.soloScene=scene.id;
+ const playStep=(index)=>{
+  if(token!==soloVersion)return;
+  if(asleep||pendingQuestion||openSheet||document.hidden||!$('creator').hidden||!st.solo){stopSoloPlay();scheduleIdle();return}
+  const step=scene.steps[index];
+  el.classList.remove(...SOLO_MOVES);
+  // 同じ座標にいるSVGだけを揺らすので、吹き出しや下の質問枠は動かさない。
+  void el.offsetWidth;el.classList.add(step.move);
+  if(speak&&st.idle){const coined=index===1?useSceneCoinage('solo',.44):null;speakWords(coined?.w||step.w,coined?.e||step.e)}else updateFace(step.e);
+  if(index===0){soloTimer=setTimeout(()=>playStep(1),3100)}
+  else{soloTimer=setTimeout(()=>{if(token!==soloVersion)return;stopSoloPlay();growTemper('curious',1.7);keepExperience('event','solo');scheduleIdle()},3000)}
+ };
+ playStep(0);return true;
 }
 function cleanWord(v){return String(v||'').replace(/[^ぁ-ゖー！？…\s]/g,'').trim().slice(0,14)}
 function speakWords(arr,emotion='neutral'){
@@ -805,6 +1366,176 @@ try{const savedWords=JSON.parse(localStorage.getItem(WORD_KEY)||'[]');if(Array.i
  const seen=new Set();for(const row of savedWords){const m=normalizeMemory(row);if(!m||seen.has(m.word)||memories.length>=MAX_WORDS)continue;seen.add(m.word);memories.push(m)}
 }}catch{}
 const storeWords=()=>{try{localStorage.setItem(WORD_KEY,JSON.stringify(memories))}catch{wordStorageOK=false;$('storageWarning').hidden=false}};
+
+// 音から作る造語。辞書のように意味を理解するのではなく、よく話した場面が積み重なる。
+// 初期語彙、聞いて覚えた単語、謎言葉とは分けて最大24語を保管する。
+const COIN_KEY='moko_coinages_v1',COIN_LIMIT=24;
+const COIN_START=['ぽ','ぷ','む','みゃ','ぴょ','ふに','ころ','ほに','ぽよ','ちょ','もに','ぺこ'];
+const COIN_END=['ぽ','ぽん','にゃ','ぷ','り','ろん','にょ','ちょ','まる','ぴ','みょ','る'];
+const COIN_BASE=['おやつ','りんご','ねこ','くも','まる','ほし','おはな','おふとん','ぼーる','ぷりん','ふわふわ','ぴょんぴょん'];
+const COIN_WORD=/^[ぁ-ゖー]{2,7}$/;
+// 造語の意味は辞書の定義ではなく、実際に声に出した場面の記録から育つ。
+// 各場面は独立。1回だけでは「意味ができた」と判断しない。
+const COIN_SCENES={
+ pet:{label:'なでなで',emotion:'あんしん',left:['えへ','ふにゃ','ぽかぽか'],right:['もっと','すき','ぎゅっ'],expression:'happy'},
+ snack:{label:'おやつ',emotion:'おいしい',left:['ぱくっ','んま','もぐもぐ'],right:['おいし','すき','えへ'],expression:'happy'},
+ poke:{label:'つんつん',emotion:'びっくり',left:['わっ','あれ？','つん'],right:['ぽよん','ふふ','びっくり'],expression:'surprised'},
+ solo:{label:'ひとりあそび',emotion:'わくわく',left:['ぴょん','みて','あれ？'],right:['たのし','ふふ','できた'],expression:'happy'},
+ joy:{label:'うれしい会話',emotion:'うれしい',left:['えへへ','すき','あのね'],right:['いっしょ','ぽかぽか','ふふ'],expression:'happy'}
+};
+const COIN_SCENE_KEYS=Object.keys(COIN_SCENES);
+function coinageScenes(raw){
+ const out={};for(const key of COIN_SCENE_KEYS)out[key]=smallInt(raw?.[key],0,30,0);
+ return out;
+}
+function strongestCoinScene(item){
+ const scores=COIN_SCENE_KEYS.map(key=>({key,score:item.scenes?.[key]||0}));
+ scores.sort((a,b)=>b.score-a.score);
+ return scores[0]?.score? scores[0]:null;
+}
+function coinageValid(x,petName=look.name){
+ return !!x&&typeof x==='object'&&typeof x.word==='string'&&COIN_WORD.test(x.word)&&
+ !INITIAL_WORD_SET.has(x.word)&&!BASIC_SKIP.has(x.word)&&x.word!==petName&&
+ (typeof x.origin==='string'&&(/^[ぁ-ゖー]{2,7}$/.test(x.origin)||x.origin==='ひらめき'));
+}
+function normalizeCoinage(raw,petName=look.name){
+ if(!coinageValid(raw,petName))return null;
+ const created=Number(raw.created),last=Number(raw.last);
+ return {word:raw.word,origin:raw.origin,uses:smallInt(raw.uses,0,100,0),scenes:coinageScenes(raw.scenes),
+  created:Number.isFinite(created)&&created>0&&created<Date.now()+86400000?Math.floor(created):Date.now(),
+  last:Number.isFinite(last)&&last>0&&last<Date.now()+86400000?Math.floor(last):Date.now()};
+}
+let coinages=[];
+try{const loaded=JSON.parse(localStorage.getItem(COIN_KEY)||'[]');if(Array.isArray(loaded)){
+ const seen=new Set();for(const raw of loaded.slice(0,COIN_LIMIT*2)){
+  const item=normalizeCoinage(raw);if(!item||seen.has(item.word)||coinages.length>=COIN_LIMIT)continue;
+  seen.add(item.word);coinages.push(item)
+ }
+}}catch{}
+function storeCoinages(){
+ try{localStorage.setItem(COIN_KEY,JSON.stringify(coinages))}
+ catch{wordStorageOK=false;$('storageWarning').hidden=false}
+}
+function coinageStage(c){return c.uses>=6?'おきにいり':c.uses>=3?'よく いう':'ひらめいた'}
+let lastCoinWord='';
+function renderCoinages(){
+ const list=$('coinageList');if(!list)return;
+ list.replaceChildren();$('coinCount').textContent=coinages.length+' / '+COIN_LIMIT;
+ if(!coinages.length){const empty=document.createElement('div');empty.className='wordbook-empty';empty.textContent='まだ じぶんの ことばは ないよ。';list.append(empty);return}
+ const sorted=[...coinages].sort((a,b)=>b.uses-a.uses||b.last-a.last);
+ for(const item of sorted){
+  const tile=document.createElement('div');tile.className='coinage-tile';
+  const word=document.createElement('strong');word.className='coinage-word';word.textContent=item.word;
+  const origin=document.createElement('span');origin.className='coinage-source';origin.textContent=item.origin==='ひらめき'?'おとから うまれた':item.origin+' から うまれた';
+  const feeling=document.createElement('div');feeling.className='coinage-feeling';
+  const scene=strongestCoinScene(item);
+  if(!scene){feeling.classList.add('unknown');feeling.textContent='どんな気持ちの言葉か、まだわからない';}
+  else{
+   const ctx=COIN_SCENES[scene.key];
+   if(scene.score===1)feeling.textContent=ctx.label+'のときに、言ってみた';
+   else if(scene.score===2)feeling.textContent=ctx.label+'のときが、好きなのかな？';
+   else{
+    const label=document.createElement('strong');label.className='coinage-emotion';label.textContent=ctx.emotion;
+    feeling.append('もこにとって「',label,'」の言葉みたい');
+   }
+  }
+  const bottom=document.createElement('div');bottom.className='coinage-bottom';
+  const stage=document.createElement('span');stage.className='coinage-stage';stage.textContent=coinageStage(item)+' ・ '+item.uses+'かい';
+  const forget=document.createElement('button');forget.type='button';forget.dataset.forgetCoinage=item.word;forget.textContent='わすれる';forget.setAttribute('aria-label',item.word+'を わすれる');
+  bottom.append(stage,forget);tile.append(word,origin,feeling,bottom);list.append(tile);
+ }
+}
+function coinageOrigin(){
+ const known=memories.filter(m=>m.hears>=2&&COIN_WORD.test(m.word));
+ if(known.length&&Math.random()<.58){
+  const weighted=known.flatMap(m=>Array(Math.min(5,1+m.affinity)).fill(m.word));return choose(weighted);
+ }
+ if(Math.random()<.8)return choose(COIN_BASE);
+ return 'ひらめき';
+}
+function inventedSound(origin){
+ const end=choose(COIN_END);
+ if(origin!=='ひらめき'){
+  const chars=[...origin];const length=(chars.length>=4&&Math.random()<.30)?3:2;
+  return chars.slice(0,length).join('')+end;
+ }
+ return choose(COIN_START)+end;
+}
+function inventCoinage(){
+ if(coinages.length>=COIN_LIMIT)return null;
+ for(let tries=0;tries<120;tries++){
+  const origin=coinageOrigin(),word=inventedSound(origin);
+  if(!COIN_WORD.test(word)||INITIAL_WORD_SET.has(word)||BASIC_SKIP.has(word)||word===look.name||
+     memories.some(m=>m.word===word)||coinages.some(c=>c.word===word)||COIN_BASE.includes(word))continue;
+  const item={word,origin,uses:0,scenes:coinageScenes(null),created:Date.now(),last:Date.now()};
+  coinages.push(item);storeCoinages();return item;
+ }
+ return null;
+}
+function chooseCoinage(){
+ const pool=coinages.filter(x=>coinages.length===1||x.word!==lastCoinWord);
+ if(!pool.length)return null;
+ const weighted=pool.flatMap(c=>Array(Math.min(8,1+Math.floor(c.uses/2))).fill(c));
+ return choose(weighted);
+}
+function coinagePhrase(item){
+ const remembered=strongestCoinScene(item);
+ if(remembered&&remembered.score>=3&&Math.random()<.65){
+  const scene=COIN_SCENES[remembered.key];
+  return {w:[item.word,scene.emotion,choose(['ふふ','すき','あのね'])],e:scene.expression};
+ }
+ if(item.uses<=1)return {w:['えっと',item.word+'？','できた？'],e:'puzzled'};
+ if(item.uses<=2)return {w:['あのね',item.word,'いえた！'],e:'happy'};
+ const forms=[
+  [item.word,'ふふ','すき'],['ねえねえ',item.word,'えへ'],[item.word,'ぽよん','ふふ']
+ ];
+ if(item.origin!=='ひらめき'&&Math.random()<.50)forms.push([item.origin,item.word,'えへへ']);
+ return {w:choose(forms),e:'happy'};
+}
+function useCoinage(item,sceneKey=null){
+ item.uses=Math.min(100,item.uses+1);item.last=Date.now();lastCoinWord=item.word;
+ if(sceneKey&&COIN_SCENES[sceneKey]){
+  item.scenes=coinageScenes(item.scenes);
+  item.scenes[sceneKey]=Math.min(30,item.scenes[sceneKey]+1);
+ }
+ storeCoinages();renderCoinages();
+ if(item.uses>=2)keepExperience('coinage',item.word);
+ if(sceneKey&&COIN_SCENES[sceneKey]){
+  const scene=COIN_SCENES[sceneKey];
+  return {w:[choose(scene.left),item.word,choose(scene.right)],e:scene.expression};
+ }
+ return coinagePhrase(item);
+}
+// 触れ合いや会話の場面で造語を言ったときだけ、その場面への親しみが育つ。
+function useSceneCoinage(sceneKey,chance){
+ if(!st.coinages||!COIN_SCENES[sceneKey]||!coinages.length||Math.random()>=chance)return null;
+ const weighted=[];
+ for(const item of coinages){
+  const prior=item.scenes?.[sceneKey]||0;
+  const recent=item.word===lastCoinWord?2:0;
+  const sameOrigin=sceneKey==='snack'&&/おやつ|ぷりん|りんご/.test(item.origin)?2:0;
+  const weight=Math.min(9,2+prior*2+recent+sameOrigin);
+  for(let i=0;i<weight;i++)weighted.push(item);
+ }
+ return useCoinage(choose(weighted),sceneKey);
+}
+function newOrKnownCoinage(forceNew=false){
+ if(!st.coinages)return null;
+ let item=null;
+ if(forceNew||!coinages.length||coinages.length<COIN_LIMIT&&Math.random()<.22)item=inventCoinage();
+ if(!item)item=chooseCoinage();
+ return item?useCoinage(item):null;
+}
+function maybeCoinageIdle(){
+ if(!st.coinages||Math.random()>=Math.min(.24,.14+Math.max(0,st.temperTalk-24)*.0018))return null;
+ return newOrKnownCoinage();
+}
+function findCoinageIn(text){
+ if(!st.coinages)return null;
+ const normalized=toHira(text).replace(/[\s。、！？!?]/g,'');
+ return [...coinages].sort((a,b)=>b.word.length-a.word.length).find(c=>normalized.includes(c.word))||null;
+}
+
 function wordStage(m){return m.hears>=3&&m.affinity>=2?'おきにいり':m.hears>=3?'おぼえた':m.hears>=2?'まねっこ':'きいた'}
 function associations(m){
  const result=[];
@@ -883,7 +1614,6 @@ function learningReaction(result){
 function renderWordbook(){
  const list=$('wordList');if(!list)return;
  list.replaceChildren();$('wordCount').textContent=memories.length+' / '+MAX_WORDS;
- $('forgetAll').disabled=memories.length===0;
  const favorites=memories.filter(m=>m.hears>=3&&m.affinity>=2).sort((a,b)=>b.affinity-a.affinity||b.hears-a.hears);
  const spot=$('favoriteSpot');spot.replaceChildren();
  if(favorites.length){const label=document.createElement('span');label.textContent=look.name+'の おきにいり　';const name=document.createElement('strong');name.textContent=favorites.slice(0,3).map(m=>m.word).join('・');spot.append(label,name)}
@@ -968,6 +1698,7 @@ function clearQuestion(spoken=false){
 function startQuestion(given=null){
  if(!st.questions||!st.learn||asleep||document.hidden)return false;
  if(pendingQuestion)return false;
+ stopSoloPlay();
  cancelFollowUp();
  pendingQuestion=given?given:{...chooseQuestion(),depth:0};questionExpiry=Date.now()+105000;
  if(given?.type==='relation'){const item=memories.find(m=>m.word===given.word);if(item){item.askedLinks=[...(item.askedLinks||[]).filter(x=>x!==given.link),given.link].slice(-3);storeWords()}}
@@ -1098,10 +1829,125 @@ function popDueEcho(){
  else w=[choose(['あのね','さっき']),x.subject,choose(['ふふ','おぼえてる','すき'])];
  return {w,e:'happy',topic:'talk'};
 }
+// v1.4 ちいさな おもいで。会話全文を保存しない、短い単語・出来事だけの長期記憶。
+// まだ定着していない記録も同じ入れ物で育て、一覧には定着したものだけを表示する。
+const KEEP_KEY='moko_keepsakes_v1', KEEP_LIMIT=12, KEEP_TOTAL=24;
+const KEEP_EVENTS={pet:'なでなで',snack:'おやつ',solo:'ひとりあそび',rps:'じゃんけん',runner:'じゃんぷ',maze:'めいろ',simon:'まねっこ'};
+const KEEP_EVENT_WORDS={
+ pet:['なでなで','ぽかぽか','だったね'],
+ snack:['おやつ','ぱくっ','おいし'],
+ solo:['あそんだ','ぴょん','たのし'],
+ rps:['じゃんけん','ぽん','もっかい'],runner:['ぴょん','おほし','きらきら'],
+ maze:['めいろ','ぽよだま','もぐもぐ'],simon:['いろ','まねっこ','できた']
+};
+let keepsakes=[];
+function normalizeKeepsake(x,coinageList=coinages,wordList=memories){
+ if(!x||typeof x!=='object'||!['word','relation','event','coinage'].includes(x.type))return null;
+ const type=x.type,subject=x.subject,detail=x.detail||'';
+ if(type==='event'){
+  if(!Object.prototype.hasOwnProperty.call(KEEP_EVENTS,subject)||detail!=='')return null;
+ }else{
+  if(!echoWord(subject))return null;
+  if(type==='relation'){
+   if(!echoWord(detail)||detail===subject)return null;
+  }else if(detail!=='')return null;
+ }
+ // 造語や学習語が消された後に古い長期記憶だけ残さない。
+ if(type==='coinage'&&!coinageList.some(c=>c.word===subject))return null;
+ if(type==='relation'&&(wordList.find(m=>m.word===subject)?.noLinks||[]).includes(detail))return null;
+ const count=smallInt(x.count,1,999,1);
+ const days=Array.isArray(x.days)?[...new Set(x.days.filter(d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)))].slice(-16):[];
+ const created=Number(x.created),last=Number(x.last);
+ if(!Number.isFinite(created)||created<1||created>Date.now()+86400000||!Number.isFinite(last)||last<created||last>Date.now()+86400000)return null;
+ return {type,subject,detail,count,days:days.length?days:[localDay()],created,last,
+  recalledDay:typeof x.recalledDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x.recalledDay)?x.recalledDay:''};
+}
+function keepsakeReady(k){return k.type==='relation'?k.count>=3||k.count>=2&&k.days.length>=2:k.count>=5||k.count>=3&&k.days.length>=2}
+function keepScore(k){return (keepsakeReady(k)?1000:0)+Math.min(30,k.count)*2+k.days.length*5}
+function pruneKeepsakes(){
+ // 既に育った思い出を優先し、候補で一覧が埋まらないようにする。
+ keepsakes.sort((a,b)=>keepScore(b)-keepScore(a)||b.last-a.last);
+ const mature=keepsakes.filter(keepsakeReady).slice(0,KEEP_LIMIT);
+ const pending=keepsakes.filter(k=>!keepsakeReady(k)).slice(0,KEEP_TOTAL-mature.length);
+ keepsakes=[...mature,...pending];
+}
+try{
+ const raw=JSON.parse(localStorage.getItem(KEEP_KEY)||'[]');
+ if(Array.isArray(raw)){
+  const seen=new Set();for(const r of raw.slice(0,KEEP_TOTAL*2)){
+   const k=normalizeKeepsake(r);if(!k)continue;
+   const id=[k.type,k.subject,k.detail].join('|');if(seen.has(id))continue;seen.add(id);keepsakes.push(k);
+  }
+  pruneKeepsakes();
+ }
+}catch{}
+function storeKeepsakes(){
+ try{localStorage.setItem(KEEP_KEY,JSON.stringify(keepsakes))}catch{$('storageWarning').hidden=false}
+}
+function keepsakeTitle(k){
+ if(k.type==='event')return KEEP_EVENTS[k.subject]+'の おもいで';
+ if(k.type==='relation')return k.subject+' と '+k.detail;
+ if(k.type==='coinage')return 'じぶんの ことば「'+k.subject+'」';
+ return 'よく はなした「'+k.subject+'」';
+}
+function renderKeepsakes(){
+ const list=$('keepsakeList');if(!list)return;
+ list.replaceChildren();const kept=keepsakes.filter(keepsakeReady).sort((a,b)=>b.last-a.last);
+ $('keepsakeCount').textContent=kept.length+' / '+KEEP_LIMIT;
+ if(!kept.length){const empty=document.createElement('div');empty.className='keepsake-empty';empty.textContent='まだ大切な思い出はありません。何度か同じ言葉を話したり、一緒に遊ぶうちに少しずつ増えます。';list.append(empty);return}
+ for(const k of kept){
+  const card=document.createElement('div');card.className='keepsake-item';
+  const title=document.createElement('strong');title.className='keepsake-label';title.textContent=keepsakeTitle(k);
+  const note=document.createElement('span');note.className='keepsake-caption';
+  note.textContent=k.days.length>=2?'別の日にも、繰り返し出てきた小さな思い出です。':'何度も繰り返して、大切になった思い出です。';
+  card.append(title,note);list.append(card);
+ }
+}
+function keepExperience(type,subject,detail=''){
+ if(!st.keepsakes||!look.created)return;
+ const normalized=normalizeKeepsake({type,subject,detail,count:1,days:[localDay()],created:Date.now(),last:Date.now()});
+ if(!normalized)return;
+ const match=keepsakes.find(k=>k.type===type&&k.subject===subject&&k.detail===detail);
+ if(match){match.count=Math.min(999,match.count+1);match.last=Date.now();
+  if(!match.days.includes(localDay()))match.days=[...match.days,localDay()].slice(-16);
+ }else keepsakes.push(normalized);
+ pruneKeepsakes();storeKeepsakes();renderKeepsakes();
+}
+function keepConversation(text){
+ if(!st.keepsakes)return;
+ const t=toHira(text).trim();
+ if(/きらい|すきじゃない|すきではない|ちがう|じゃない|ではない|わからない/.test(t))return;
+ const known=[...new Set([...memories.map(m=>m.word),...INITIAL_WORDS.map(x=>x.word)])]
+  .filter(w=>w.length>=2&&!['すき','なに','これ','それ','ここ','あのね','うん','おはよう','ありがと'].includes(w))
+  .sort((a,b)=>b.length-a.length);
+ const word=known.find(w=>containsSpokenWord(t,w));
+ if(word)keepExperience('word',word);
+}
+function forgetKeepsake(type,subject,detail=''){
+ const old=keepsakes.length;keepsakes=keepsakes.filter(k=>!(k.type===type&&k.subject===subject&&k.detail===detail));
+ if(old!==keepsakes.length){storeKeepsakes();renderKeepsakes()}
+}
+function recallKeepsake(){
+ if(!st.keepsakes||!st.idle||asleep||pendingQuestion||openSheet||document.hidden||!$('creator').hidden||Math.random()>.24)return null;
+ const today=localDay(), now=Date.now();
+ // 当日の出来事を「昔の思い出」として語らない。同じ記憶は一日一度だけ。
+ const pool=keepsakes.filter(k=>keepsakeReady(k)&&k.recalledDay!==today&&now-k.created>=20*3600000&&
+  (k.type!=='relation'||!(memories.find(m=>m.word===k.subject)?.noLinks||[]).includes(k.detail)));
+ if(!pool.length)return null;
+ const k=choose(pool);k.recalledDay=today;storeKeepsakes();
+ let w;
+ if(k.type==='event')w=KEEP_EVENT_WORDS[k.subject];
+ else if(k.type==='relation')w=[k.subject,k.detail,choose(['だね','おぼえてる','ふふ'])];
+ else if(k.type==='coinage')w=['あのね',k.subject,choose(['すき','ふふ','おぼえてる'])];
+ else w=['あのね',k.subject,choose(['おぼえてる','すき','ふふ'])];
+ return {w,e:'happy'};
+}
+
 function answerQuestion(reply){
  if(!pendingQuestion)return false;
  const q=pendingQuestion,normalized=toHira(reply).trim().replace(/[!！?？。\s、,.]/g,'');
  if(!normalized)return false;
+ growTemper('talk',1.4);
  addChat('mine',reply);
  if(normalized==='おしまい'){
   clearQuestion();const done=['うん','またね','ぽや'];
@@ -1117,9 +1963,11 @@ function answerQuestion(reply){
   else if(neg){
    if(item){item.links=item.links.filter(x=>x!==q.link);item.noLinks=[...(item.noLinks||[]).filter(x=>x!==q.link),q.link].slice(-3);storeWords();renderWordbook()}
    echoes=echoes.filter(x=>!(x.subject===q.word&&x.detail===q.link));saveEchoes();
+   forgetKeepsake('relation',q.word,q.link);
    w=['ちがう？',q.word,'そうなんだ'];e='puzzled';
   }else if(yes){
    if(item)connectWords(q.word,q.link);
+   keepExperience('relation',q.word,q.link);
    rememberEcho(q.word,q.link,'relation');
    w=[q.word,q.link,'そうなんだ！'];e='happy';anim='lovely';
    follow=secondQuestion(q,'',true);
@@ -1127,14 +1975,14 @@ function answerQuestion(reply){
  }else if(q.type==='where'){
   const word=extractShortReply(reply,q.word,'where'),item=memories.find(m=>m.word===q.word);
   if(unsure||NEGATIVE.test(normalized)){w=['そっか','どこかな','ぽや']}
-  else if(word&&item){connectWords(q.word,word);rememberEcho(q.word,word,'where');w=[q.word,word,'いた！'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
+  else if(word&&item){connectWords(q.word,word);keepExperience('relation',q.word,word);rememberEcho(q.word,word,'where');w=[q.word,word,'いた！'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
   else{w=['ん？','どこかな','ふしぎ'];e='puzzled'}
  }else{
   const word=extractShortReply(reply,'','favorite');
   if(unsure||NEGATIVE.test(normalized))w=['うん','ゆっくり','でいいよ'];
   else if(word&&validWord(word)){
    const result=rememberWord(word);
-   if(result.item){likeWord(result.item);rememberEcho(word,'','mention');w=[word,'すき？','おぼえる'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
+   if(result.item){likeWord(result.item);keepExperience('word',word);rememberEcho(word,'','mention');w=[word,'すき？','おぼえる'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
    else w=['あのね','きいたよ','ふふ'];
   }else w=['ん？','まねっこ','むにゃ'];
  }
@@ -1169,6 +2017,20 @@ function idlePhrase(){
  if(st.energy<22&&Math.random()<.42)return {w:['ねむい','ふぁ…','すぅ'],e:'sleepy'};
  if(h>=22||h<5){if(Math.random()<.36)return {w:['よる','しずか','すき'],e:'sleepy'}}
  if(h>=5&&h<10){if(Math.random()<.27)return {w:['おはよ','あさ','きた'],e:'happy'}}
+ if(st.temperTalk>=48&&Math.random()<Math.min(.20,(st.temperTalk-40)/230)){
+  return choose([
+   {w:['あのね','きいて','えへ'],e:'happy'},
+   {w:['ねえねえ','あれ？','ふふ'],e:'happy'},
+   {w:['えっと','おはなし','する？'],e:'puzzled'},
+   {w:['おてて','ここ','いるよ'],e:'happy'}
+  ]);
+ }
+ if(st.temperCuddle>=47&&Math.random()<Math.min(.17,(st.temperCuddle-39)/225)){
+  return choose([{w:['なでなで','ぽかぽか','すき'],e:'happy'},
+    {w:['ここ','いっしょ','ふふ'],e:'happy'},
+    {w:['ぎゅっ','えへへ','ぽよ'],e:'happy'}]);
+ }
+ const invented=maybeCoinageIdle();if(invented)return invented;
  if(Math.random()<.23)return choose(babbles);
  // おぼえた単語をたまに自発的に使う。元の幼い言葉・謎言葉が主役のまま。
  const remembered=memories.filter(m=>m.hears>=3);
@@ -1207,6 +2069,7 @@ const dreamPhrases=[
 ];
 let lastDreamWord='';
 function dreamPhrase(){
+ if(st.coinages&&coinages.length&&Math.random()<.12){const c=chooseCoinage();if(c)return {w:['むにゃ…',c.word+'…','すぅ…'],e:'sleepy'}.w}
  const known=memories.filter(m=>m.hears>=3);
  if(known.length&&Math.random()<.36){
   const pool=known.filter(m=>known.length===1||m.word!==lastDreamWord);
@@ -1237,9 +2100,9 @@ function scheduleDream(first=false){
   scheduleDream();
  },delay);
 }
-function scheduleIdle(first=false){clearTimeout(autoTimer);if(asleep){scheduleDream(first);return}if(!st.idle||document.hidden)return;
+function scheduleIdle(first=false){clearTimeout(autoTimer);if(asleep){scheduleDream(first);return}if((!st.idle&&!st.solo)||document.hidden)return;
  const times={slow:[31000,47000],normal:[15000,27000],often:[8000,15000]};
- const [lo,hi]=times[st.pace]||times.normal;
+ const [lo,hi]=st.idle?(times[st.pace]||times.normal):[26000,42000];
  autoTimer=setTimeout(()=>{
   if(followUpTimer){scheduleIdle();return}
   if(pendingQuestion){
@@ -1247,13 +2110,18 @@ function scheduleIdle(first=false){clearTimeout(autoTimer);if(asleep){scheduleDr
    else{autoTimer=setTimeout(()=>scheduleIdle(true),Math.min(11000,Math.max(700,questionExpiry-Date.now())));return}
   }
   // ほかの画面を見ているときはしつもんで割りこまない。
-  if(openSheet){scheduleIdle();return}
+  if(openSheet||!$('creator').hidden||!$('gameScreen').hidden){scheduleIdle();return}
+  // ひとりごとがオフなら、設定次第で無言のひとりあそびだけする。
+  if(!st.idle){if(st.solo&&startSoloPlay(false))return;scheduleIdle();return}
   const echo=popDueEcho();
   if(echo){speakWords(echo.w,echo.e);st.energy=clamp(st.energy-.4);updateMood();scheduleIdle();return}
+  const oldThought=recallKeepsake();
+  if(oldThought){speakWords(oldThought.w,oldThought.e);updateMood();scheduleIdle();return}
   questionIdleCount++;
-  if(st.learn&&st.questions&&questionIdleCount>=3&&Date.now()>=questionCooldown&&Math.random()<.46){
+  if(st.learn&&st.questions&&questionIdleCount>=3&&Date.now()>=questionCooldown&&Math.random()<Math.min(.67,.46+Math.max(0,st.temperCurious-36)*.0035)){
    if(startQuestion()){scheduleIdle();return}
   }
+  if(st.solo&&Math.random()<Math.max(.28,Math.min(.60,.42+(st.temperCurious-24)*.0028-(st.temperTalk-24)*.0016))&&startSoloPlay(true))return;
   const {w,e}=idlePhrase();speakWords(w,e);st.energy=clamp(st.energy-.7);st.curiosity=clamp(st.curiosity+1);updateMood();scheduleIdle()
  },first?6400:lo+Math.random()*(hi-lo));
 }
@@ -1264,6 +2132,7 @@ function addChat(who,text){
  log.appendChild(div);while(log.children.length>32)log.firstElementChild.remove();log.scrollTop=log.scrollHeight;
 }
 function react(words,exp='happy',anim='wiggle',log=false){
+ stopSoloPlay();
  if(asleep){asleep=false;$('robotWrap').classList.remove('sleep')}
  st.warmth=clamp(st.warmth+1.5);st.energy=clamp(st.energy-1);st.curiosity=clamp(st.curiosity+1);
  speakWords(words,exp);animate(anim);updateMood();store();resetIdle();
@@ -1273,16 +2142,23 @@ const pokeResponses=[['んっ','つん','なあに？'],['わっ','ぷに','し�
 const petResponses=[['なでなで','すき','もっと'],['えへへ','あったか','すき'],['ふにゃ','きもち','いい'],['おてて','やさし','ぽかぽか'],['んふ','ぎゅー','して']];
 const snackResponses=[['おやつ','ぱくっ','おいし'],['もぐもぐ','あまい','すき'],['わあ','ぱく','ありがと'],['んま','もっと？','えへ']];
 function wake(){asleep=false;updateFace('happy');react(['あっ','おきた','おはよ'],'happy','wiggle')}
-function poke(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.pokes++;react(choose(pokeResponses),'surprised','squish')}
-function pet(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.pets++;st.warmth=clamp(st.warmth+3);react(choose(petResponses),'happy','pet')}
-function snack(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.energy=clamp(st.energy+12);react(choose(snackResponses),'happy','nibble')}
+function poke(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.pokes++;growTemper('curious',1.1);const coin=useSceneCoinage('poke',.26);react(coin?.w||choose(pokeResponses),coin?.e||'surprised','squish')}
+function pet(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.pets++;st.warmth=clamp(st.warmth+3);growTemper('cuddle',3.6);keepExperience('event','pet');
+ const w=st.temperCuddle>=54&&Math.random()<.56?choose([['ふにゃ','もっと','なでなで'],['ぎゅっ','すき！','えへへ'],['あったか','ここ','すき']]):choose(petResponses);
+ const coin=useSceneCoinage('pet',.48);react(coin?.w||w,'happy','pet')}
+
+function snack(){cancelFollowUp();if(asleep){wake();return}if(pendingQuestion)clearQuestion();st.energy=clamp(st.energy+12);growTemper('cuddle',.7);keepExperience('event','snack');const coin=useSceneCoinage('snack',.52);react(coin?.w||choose(snackResponses),'happy','nibble')}
 function talk(text){const original=text.trim();if(!original)return;
+ stopSoloPlay();
  cancelFollowUp();
  if(tryAnswerPending(original))return;
+ growTemper('talk',3.3);
  addChat('mine',original);const t=original.normalize('NFKC').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+ const coinedMention=findCoinageIn(original);
  if(asleep&&!/おやすみ|ねんね|ねて/.test(t)){asleep=false;$('robotWrap').classList.remove('sleep')}
  let w,e='neutral',anim='wiggle',topic='talk';
- if(/おやすみ|ねんね|ねて/.test(t)){w=['おやすみ','すぅ','またね'];e='sleepy';anim='pet';asleep=true}
+ if(coinedMention&&!asleep){const used=useCoinage(coinedMention);w=used.w;e=used.e;topic='talk';anim='wiggle'}
+ else if(/おやすみ|ねんね|ねて/.test(t)){w=['おやすみ','すぅ','またね'];e='sleepy';anim='pet';asleep=true}
  else if(/おはよう|おはよ|こんにちは|こんばんは|やっほ|はじめまして/.test(t)){w=choose([['おはよ','きた！','うれし'],['やっほ','ここだよ','えへ'],['こんにちは','いっしょ','いる！']]);e='happy';topic='talk'}
  else if(/すき|だいすき|かわいい|あいしてる|いいこ/.test(t)&&!/きらい|すきじゃない|すきではない/.test(t)){w=choose([['すき！','ぎゅっ','えへへ'],['うれし','ぽかぽか','すき'],['えへ','もっと','ぎゅー']]);e='happy';topic='love';anim='lovely';st.warmth=clamp(st.warmth+7)}
  else if(/かなしい|さみしい|さびしい|つらい|ないた|泣|こわい/.test(t)){w=choose([['だいじょぶ','ここ','いるよ'],['ぎゅっ','よしよし','いっしょ'],['しょぼん','おてて','どうぞ']]);e='puzzled';topic='love';anim='pet'}
@@ -1303,7 +2179,7 @@ function talk(text){const original=text.trim();if(!original)return;
   else{w=choose([['ん？','むにゃ','なあに？'],['えっと','ぽゆぽ','ん？'],['ふしぎ','むむ','えへ'],['わかんない','でも','すき'],['ほよ？','もういっかい','いう？']]);e='puzzled';st.curiosity=clamp(st.curiosity+4)}
  }
  // 語彙を検知できる会話だけで、１ターンに１単語まで。意味のある返答を毎回上書きしない。
- const candidate=learnCandidate(original);
+ const candidate=coinedMention?null:learnCandidate(original);
  const learned=candidate&&(!INITIAL_WORD_SET.has(candidate)||memories.some(m=>m.word===candidate))?rememberWord(candidate):null;
  if(learned?.item){
   // すきなものを聞くと、もこ自身も少し気に入りやすくなる。
@@ -1317,28 +2193,35 @@ function talk(text){const original=text.trim();if(!original)return;
   else if(Math.random()<.55){w=talkAbout.w;e=talkAbout.e}
   topic=learned.item.topic;
  }
+ // 嬉しい言葉をかけられた場面も、もこだけの言葉と少しずつ結びつく。
+ if(!coinedMention&&!asleep&&/(?:だい)?すき|かわいい|いいこ|うれしい|ありがとう|ありがと|たのしい/.test(t)&&
+    !/きらい|すきじゃない|すきではない|いやだ/.test(t)){
+  const coin=useSceneCoinage('joy',.37);
+  if(coin){w=coin.w;e=coin.e;anim='lovely'}
+ }
  contextTopic=topic;contextUses=2;
  // 通常会話の中で出た身近な単語も、時間がたってからぽつりと思い出す。
- if(!asleep&&topic!=='sleep')echoFromChat(original);
+ if(!asleep&&topic!=='sleep'){echoFromChat(original);keepConversation(original)}
  // ねんねの ことばの あとだけ じぶんで おやすみ
  st.warmth=clamp(st.warmth+2);st.energy=clamp(st.energy-1);
  speakWords(w,e);animate(anim);updateMood();store();scheduleIdle();addChat('robot',w.filter(Boolean).join('　'));
  if(asleep){$('robotWrap').classList.add('sleep');updateMood()}
 }
 function openPanel(which){
+ stopSoloPlay();
  if(openSheet)closePanel();openSheet=which;
  $('scrim').classList.add('shown');
  const panel=$(which==='menu'?'menuSheet':'chatSheet');panel.classList.add('open');panel.setAttribute('aria-hidden','false');
  $('menuButton').setAttribute('aria-expanded',String(which==='menu'));
  $('chatButton').classList.toggle('active',which==='chat');
- if(which==='menu'){updateMood();renderWordbook()}
+ if(which==='menu'){updateMood();updateTemperament();renderWordbook();renderKeepsakes()}
  setTimeout(()=>{const el=panel.querySelector('.close');if(el&&openSheet===which)el.focus({preventScroll:true})},250)
 }
 function closePanel(){
  if(!openSheet)return;
  const panel=$(openSheet==='menu'?'menuSheet':'chatSheet');panel.classList.remove('open');panel.setAttribute('aria-hidden','true');
  $('scrim').classList.remove('shown');$('menuButton').setAttribute('aria-expanded','false');$('chatButton').classList.remove('active');
- openSheet=null;document.activeElement?.blur();
+ openSheet=null;document.activeElement?.blur();scheduleIdle();
 }
 // はじめての であい／みための かえかた
 const NAME_CHOICES=['もこ','ぽぽ','ぷく','むに','ころ','ぴの','こむぎ','ふわ'];
@@ -1362,6 +2245,7 @@ function refreshCreator(){
  paintRobot(creatorSVG,draftLook);
 }
 function openCreator(edit=false){
+ stopSoloPlay();
  if(openSheet)closePanel();creatorEditing=edit;
  draftLook={...look};$('creatorName').value=draftLook.name;
  $('creatorTitle').textContent=edit?'みためを かえる':'はじめまして。';
@@ -1389,24 +2273,1033 @@ $('creatorDone').addEventListener('click',()=>{
 });
 $('creatorClose').addEventListener('click',closeCreator);
 $('editLook').addEventListener('click',()=>openCreator(true));
-$('saveLook').addEventListener('click',()=>{
- const data={kind:'moko-look',version:1,appearance:{...look}};
- const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
- const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='moko_mitame.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
- $('lookFeedback').textContent='みためを ほぞんしたよ';
+
+// v1.5 もこと あそぶ：4つのゲームは完全オフラインで動作し、一括セーブに含める。
+const GAME_KEY='moko_games_v1';
+const DEFAULT_GAME_STATS={rpsPlayed:0,rpsWins:0,rpsDraws:0,simonBest:0,simonPlayed:0,
+ runnerBest:0,runnerBestEasy:0,runnerBestNormal:0,runnerBestHard:0,runnerStars:0,runnerPlayed:0,
+ mazeBest:0,mazeBestEasy:0,mazeBestNormal:0,mazeBestHard:0,mazeClears:0,mazePlayed:0,totalPlays:0};
+function normalizeGameStats(raw,strict=false){
+ if(raw===undefined||raw===null)return {...DEFAULT_GAME_STATS}; // v1.4以前の保存ファイル
+ if(!raw||typeof raw!=='object'||Array.isArray(raw)){if(strict)throw Error('games');return {...DEFAULT_GAME_STATS}}
+ const result={...DEFAULT_GAME_STATS};
+ for(const name of Object.keys(DEFAULT_GAME_STATS)){
+  const n=raw[name];
+  if(n===undefined&&/^(runnerBest|mazeBest)(Easy|Normal|Hard)$/.test(name)){
+   // 旧版の総合最高記録は「ふつう」の記録として引き継ぐ。
+   result[name]=name.endsWith('Normal')?(Number(raw[name.startsWith('runner')?'runnerBest':'mazeBest'])||0):0;
+   continue;
+  }
+  if(!Number.isInteger(n)||n<0||n>1e8){if(strict)throw Error('games');return {...DEFAULT_GAME_STATS}}
+  result[name]=n;
+ }
+ return result;
+}
+let gameStats={...DEFAULT_GAME_STATS};
+try{gameStats=normalizeGameStats(JSON.parse(localStorage.getItem(GAME_KEY)||'null'))}catch{}
+let gameMode=null,gameTimers=[],gameRAF=0,gamePaused=false;
+let rpsState=null,simonState=null,runnerState=null,mazeState=null;
+const DIFFICULTIES=['easy','normal','hard'];
+const DIFFICULTY_NAMES={easy:'かんたん',normal:'ふつう',hard:'むずかしい'};
+const DIFFICULTY_SUFFIX={easy:'Easy',normal:'Normal',hard:'Hard'};
+const RUN_DIFFICULTY={
+ easy:{speed:.80,spawnMin:2.10,spawnRange:1.0,shoot:1.48,bullet:.80,shooterChance:.58,item:.82},
+ normal:{speed:1,spawnMin:1.45,spawnRange:.8,shoot:1,bullet:1,shooterChance:1,item:1},
+ hard:{speed:1.13,spawnMin:1.15,spawnRange:.58,shoot:.72,bullet:1.18,shooterChance:1,item:1.12}
+};
+const MAZE_DIFFICULTY={
+ easy:{lives:5,enemies:1,heroStep:.13,enemyStep:.78,chase:.43,powerSeconds:9},
+ normal:{lives:3,enemies:2,heroStep:.14,enemyStep:.51,chase:.72,powerSeconds:7},
+ hard:{lives:2,enemies:3,heroStep:.14,enemyStep:.39,chase:.90,powerSeconds:5.5}
+};
+let gameSprite=null;
+function bestKey(kind,difficulty){return kind+'Best'+DIFFICULTY_SUFFIX[difficulty]}
+function currentBest(kind,difficulty){return gameStats[bestKey(kind,difficulty)]||0}
+function syncDifficultyControls(){for(const [kind,key] of [['runner','runnerDifficulty'],['maze','mazeDifficulty']])$(kind+'Difficulty').value=DIFFICULTIES.includes(st[key])?st[key]:'normal'}
+function lockDifficulty(kind,lock){$(kind+'Difficulty').disabled=lock}
+function setDifficulty(kind,value){
+ if(!DIFFICULTIES.includes(value))return;
+ st[kind+'Difficulty']=value;store();
+ if(kind==='runner'){$('runnerBest').textContent=currentBest('runner',value);if(runnerState&&!runnerState.active)prepRunner()}
+ else{$('mazeBest').textContent=currentBest('maze',value);if(mazeState&&!mazeState.active)startMaze(false)}
+}
+for(const kind of ['runner','maze'])$(kind+'Difficulty').addEventListener('change',e=>setDifficulty(kind,e.target.value));
+const gameDetails={rps:['じゃんけん','もこと じゃんけん'],runner:['じゃんぷ','もこもこ じゃんぷ'],maze:['めいろ','もぐもぐ めいろ'],simon:['まねっこ','もこの まねっこ']};
+function saveGameStats(){try{localStorage.setItem(GAME_KEY,JSON.stringify(gameStats))}catch{$('storageWarning').hidden=false}}
+function updateGameRecords(){
+ $('hubRps').textContent='かった：'+gameStats.rpsWins+'かい';
+ $('hubRunner').textContent='さいこう：'+gameStats.runnerBest;
+ $('hubMaze').textContent='くりあ：'+gameStats.mazeClears+'かい';
+ $('hubSimon').textContent='さいこう：'+gameStats.simonBest+'こ';
+ $('simonBest').textContent=gameStats.simonBest;
+ $('runnerBest').textContent=currentBest('runner',st.runnerDifficulty);
+ $('mazeBest').textContent=currentBest('maze',st.mazeDifficulty);
+ $('rpsName').textContent=look.name;
+ $('rpsPlayerName').textContent=look.name;
+ $('gameWelcome').textContent=look.name+'と いっしょに あそぼ！';
+ $('hubRpsName').textContent=look.name+'と じゃんけん';
+ $('hubSimonName').textContent=look.name+'の まねっこ';
+ // 成績更新でアバターを作り直さない（リアクションの途中で消さない）。
+ if($('rpsMascot')&&!$('rpsMascot').firstElementChild)gameAvatar('rpsMascot');
+ if($('simonMascot')&&!$('simonMascot').firstElementChild)gameAvatar('simonMascot');
+}
+function gameTimer(fn,delay){const t=setTimeout(()=>{gameTimers=gameTimers.filter(n=>n!==t);fn()},delay);gameTimers.push(t);return t}
+function clearGameTimers(){for(const t of gameTimers)clearTimeout(t);gameTimers=[]}
+function stopGameLoop(){if(gameRAF)cancelAnimationFrame(gameRAF);gameRAF=0}
+function clearCurrentGame(){clearGameTimers();stopGameLoop();rpsState=null;simonState=null;runnerState=null;mazeState=null;gamePaused=false;
+ lockDifficulty('runner',false);lockDifficulty('maze',false);
+ for(const mode of ['rps','simon']){const avatar=$(mode+'Mascot'),bubble=$(mode+'Status');if(avatar){avatar.className='faceoff-mascot'}if(bubble)delete bubble.dataset.mood}
+ for(const hand of ['rpsYourHand','rpsTheirHand'])$(hand).classList.remove('shaking','revealed');
+}
+function gameAvatar(where){
+ const box=$(where);box.replaceChildren();
+ const svg=creatorSVG.cloneNode(true);
+ svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('aria-hidden','true');
+ svg.style.width='100%';svg.style.height='100%';paintRobot(svg,look);box.append(svg);
+}
+// もこの色・リボンはそのまま。ゲームの反応は表情と小さな仕草だけを変える。
+function faceoffReact(mode,emotion='neutral'){
+ const avatar=$(mode+'Mascot'),bubble=$(mode+'Status');if(!avatar||!bubble)return;
+ avatar.className='faceoff-mascot';bubble.dataset.mood=emotion==='cheer'?'cheer':emotion==='oops'?'oops':'';
+ const svg=avatar.querySelector('svg');if(!svg)return;
+ const mouth=svg.querySelector('[data-pid="mouth"],#mouth');
+ if(mouth){
+  const faces={neutral:'M206 139 Q199 156 214 160 Q226 162 227 150 Q229 164 242 158 Q251 151 244 140',
+    thinking:'M212 153 Q224 147 239 153',ready:'M205 148 Q225 161 249 147',
+    cheer:'M197 146 Q225 189 253 145',oops:'M216 151 Q228 141 240 151',
+    nod:'M207 149 Q224 171 247 149'};
+  mouth.setAttribute('d',faces[emotion]||faces.neutral);
+  mouth.setAttribute('fill','none');mouth.setAttribute('stroke',look.eyes);
+  mouth.setAttribute('stroke-width',emotion==='thinking'?'7':'9');
+ }
+ if(emotion!=='neutral'){
+  void avatar.offsetWidth; avatar.classList.add(emotion);
+ }
+}
+function updateGameSprite(){
+ // ゲーム中にもキャラメイクの色を保持。canvas は同じSVGを画像化して描く。
+ try{
+  const svg=creatorSVG.cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  svg.removeAttribute('class');svg.setAttribute('width','430');svg.setAttribute('height','415');
+  paintRobot(svg,look);
+  const str=new XMLSerializer().serializeToString(svg);
+  const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);
+  gameSprite=img;
+ }catch{gameSprite=null}
+}
+function gameDrawAvatar(ctx,x,y,w,h){
+ if(gameSprite&&gameSprite.complete&&gameSprite.naturalWidth){try{ctx.drawImage(gameSprite,x,y,w,h);return}catch{}}
+ // 画像化できない端末向けのフォールバック。
+ ctx.fillStyle=look.body;ctx.beginPath();ctx.ellipse(x+w/2,y+h*.54,w*.43,h*.45,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=look.eyes;ctx.beginPath();ctx.ellipse(x+w*.38,y+h*.4,w*.055,h*.095,0,0,7);ctx.ellipse(x+w*.62,y+h*.4,w*.055,h*.095,0,0,7);ctx.fill();
+ ctx.fillStyle=look.ribbon;ctx.beginPath();ctx.ellipse(x+w*.43,y+h*.65,w*.16,h*.10,0,0,7);ctx.ellipse(x+w*.57,y+h*.65,w*.16,h*.10,0,0,7);ctx.fill();
+}
+function gameSuccess(kind,success){
+ gameStats.totalPlays++;
+ const kindTemper=kind==='rps'?'talk':kind==='simon'?'talk':'curious';
+ growTemper(kindTemper,success?1.5:.55);
+ keepExperience('event',kind);
+ st.warmth=clamp(st.warmth+(success?2:1));store();updateMood();
+ saveGameStats();updateGameRecords();
+}
+function openGames(){
+ if(!$('creator').hidden)return;
+ if(openSheet)closePanel();if(pendingQuestion)clearQuestion();cancelFollowUp();stopSoloPlay();clearTimeout(autoTimer);
+ if(asleep){asleep=false;$('robotWrap').classList.remove('sleep');updateFace('happy');updateMood()}
+ $('gameScreen').hidden=false;$('gamesButton').classList.add('active');
+ updateGameSprite();showGameHub();
+}
+function showGameHub(){
+ clearCurrentGame();gameMode=null;
+ $('gameScreen').classList.remove('maze-mode');
+ $('gameHub').hidden=false;
+ for(const k of Object.keys(gameDetails))$('game'+k[0].toUpperCase()+k.slice(1)).hidden=true;
+ $('gameHeading').textContent=look.name+'の あそびば';
+ $('gameBack').textContent='もどる';
+ gameAvatar('gameHubAvatar');updateGameRecords();$('gameContent').scrollTop=0;
+}
+function closeGame(){
+ if($('gameScreen').hidden)return;
+ clearCurrentGame();gameMode=null;$('gameScreen').classList.remove('maze-mode');$('gameScreen').hidden=true;$('gamesButton').classList.remove('active');
+ scheduleIdle(true);
+}
+function selectGame(mode){
+ if(!gameDetails[mode])return;
+ clearCurrentGame();gameMode=mode;
+ $('gameScreen').classList.toggle('maze-mode',mode==='maze');
+ $('gameHub').hidden=true;
+ for(const k of Object.keys(gameDetails))$('game'+k[0].toUpperCase()+k.slice(1)).hidden=(k!==mode);
+ $('gameHeading').textContent=mode==='rps'?look.name+'と じゃんけん':mode==='simon'?look.name+'の まねっこ':gameDetails[mode][1];$('gameBack').textContent='あそびば';
+ $('gameContent').scrollTop=0;syncDifficultyControls();updateGameRecords();updateGameSprite();
+ if(mode==='rps'){gameAvatar('rpsMascot');startRps()}
+ else if(mode==='simon'){gameAvatar('simonMascot');prepSimon()}
+ else if(mode==='runner')prepRunner();else if(mode==='maze')startMaze(false);
+}
+$('gameClose').addEventListener('click',closeGame);
+$('gameBack').addEventListener('click',()=>{if(gameMode)showGameHub();else closeGame()});
+$('gameHub').addEventListener('click',e=>{const btn=e.target.closest('[data-game]');if(btn)selectGame(btn.dataset.game)});
+document.addEventListener('keydown',e=>{
+ if($('gameScreen').hidden)return;
+ if(e.key==='Escape'){e.preventDefault();if(gameMode)showGameHub();else closeGame();return}
+ if(gameMode==='runner'&&[' ','ArrowUp','Enter'].includes(e.key)){
+  if(e.repeat)return;e.preventDefault();runnerJump();return;
+ }
+ if(gameMode==='maze'){
+  const mapping={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',a:'left',s:'down',d:'right'};
+  if(mapping[e.key]){e.preventDefault();setMazeDirection(mapping[e.key])}
+ }
 });
-$('loadLook').addEventListener('click',()=>$('loadLookFile').click());
-$('loadLookFile').addEventListener('change',async e=>{
+// ① じゃんけん：公平な一様ランダム。3・5本勝負は先取で終了。
+const RPS_HANDS=['✊','✌️','✋'],RPS_NAMES=['ぐー','ちょき','ぱー'];
+function startRps(){
+ clearGameTimers();
+ const bestOf=Number($('rpsLength').value)||3;
+ rpsState={bestOf,you:0,moko:0,round:0,done:false,pending:false};
+ $('rpsYourHand').textContent='❔';$('rpsTheirHand').textContent='❔';
+ for(const id of ['rpsYourHand','rpsTheirHand'])$(id).classList.remove('shaking','revealed');
+ $('rpsStatus').textContent='なに だす？';faceoffReact('rps','thinking');updateRpsUI();
+}
+function updateRpsUI(){
+ if(!rpsState)return;
+ $('rpsRound').textContent=rpsState.round+' / '+rpsState.bestOf;
+ $('rpsYou').textContent=rpsState.you;$('rpsMoko').textContent=rpsState.moko;
+ for(const b of $('gameRps').querySelectorAll('[data-rps]'))b.disabled=rpsState.done||rpsState.pending;
+}
+function rpsChoose(hand){
+ if(gameMode!=='rps'||!rpsState||rpsState.done||rpsState.pending||!Number.isInteger(hand)||hand<0||hand>2)return;
+ const s=rpsState,cpu=random(3);s.pending=true;
+ // 相手の手は最後の「ぽん！」で公開する。待機中の連打や再入場の古い結果を防ぐ。
+ $('rpsYourHand').textContent='✊';$('rpsTheirHand').textContent='✊';
+ for(const id of ['rpsYourHand','rpsTheirHand']){$(id).classList.remove('revealed');$(id).classList.add('shaking')}
+ $('rpsStatus').textContent='じゃん、けん……';faceoffReact('rps','ready');updateRpsUI();
+ gameTimer(()=>{if(gameMode!=='rps'||rpsState!==s)return;
+  for(const id of ['rpsYourHand','rpsTheirHand']){$(id).classList.remove('shaking');$(id).classList.add('revealed')}
+  $('rpsYourHand').textContent=RPS_HANDS[hand];$('rpsTheirHand').textContent=RPS_HANDS[cpu];
+  s.pending=false;
+  const outcome=hand===cpu?0:(hand-cpu+3)%3===1?-1:1;
+  if(outcome===0){gameStats.rpsDraws++;saveGameStats();$('rpsStatus').textContent='あいこ！ もっかい？';faceoffReact('rps','nod');updateRpsUI();return}
+  s.round++;
+  if(outcome>0){s.you++;$('rpsStatus').textContent='まけたぁ…… つぎ！';faceoffReact('rps','oops')}
+  else{s.moko++;$('rpsStatus').textContent='かった！ えへへ！';faceoffReact('rps','cheer')}
+  const need=Math.floor(s.bestOf/2)+1;
+  if(s.you>=need||s.moko>=need||s.round>=s.bestOf){
+   s.done=true;gameStats.rpsPlayed++;
+   if(s.you>s.moko){gameStats.rpsWins++;$('rpsStatus').textContent='あなたの かち！ また やろ？';faceoffReact('rps','nod')}
+   else{$('rpsStatus').textContent=look.name+'の かち！ えへへ！';faceoffReact('rps','cheer')}
+   gameSuccess('rps',s.you>s.moko);
+  }
+  updateRpsUI();
+ },850);
+}
+$('gameRps').addEventListener('click',e=>{const btn=e.target.closest('[data-rps]');if(btn)rpsChoose(Number(btn.dataset.rps))});
+$('rpsRestart').addEventListener('click',startRps);
+$('rpsLength').addEventListener('change',startRps);
+// ④ まねっこ：光る順番を覚える。デモ中は入力を受け付けない。
+function prepSimon(){
+ simonState={sequence:[],index:0,completed:0,playback:false,active:false,ended:false};
+ $('simonLevel').textContent='0';$('simonStatus').textContent='「はじめる」で あそぼ！';
+ $('simonStart').textContent='はじめる';setSimonPadsDisabled(true);faceoffReact('simon','neutral');
+}
+function setSimonPadsDisabled(disabled){$('simonPads').querySelectorAll('button').forEach(b=>b.disabled=disabled)}
+function simonFlash(num,on){const b=$('simonPads').querySelector('[data-pad="'+num+'"]');if(b)b.classList.toggle('lit',on)}
+function startSimon(){
+ clearGameTimers();for(let i=0;i<4;i++)simonFlash(i,false);
+ simonState={sequence:[random(4),random(4)],index:0,completed:0,playback:false,active:true,ended:false};
+ $('simonStart').textContent='やりなおす';nextSimonRound();
+}
+function nextSimonRound(){
+ if(!simonState||gameMode!=='simon')return;
+ const s=simonState;s.playback=true;s.index=0;setSimonPadsDisabled(true);
+ $('simonLevel').textContent=s.sequence.length;
+ $('simonStatus').textContent='よーく みててね……';faceoffReact('simon','thinking');
+ const token=s;
+ s.sequence.forEach((pad,i)=>{
+  gameTimer(()=>{if(simonState!==token||gameMode!=='simon')return;simonFlash(pad,true);faceoffReact('simon','nod')},500+i*680);
+  gameTimer(()=>{if(simonState!==token||gameMode!=='simon')return;simonFlash(pad,false)},850+i*680);
+ });
+ gameTimer(()=>{if(simonState!==token||gameMode!=='simon')return;s.playback=false;setSimonPadsDisabled(false);
+  $('simonStatus').textContent='つぎは きみ！ まねしてね';faceoffReact('simon','ready');
+ },650+s.sequence.length*680);
+}
+function simonChoose(n){
+ const s=simonState;if(gameMode!=='simon'||!s||!s.active||s.playback||s.ended)return;
+ simonFlash(n,true);gameTimer(()=>simonFlash(n,false),180);
+ if(n!==s.sequence[s.index]){
+  s.ended=true;s.active=false;setSimonPadsDisabled(true);
+  gameStats.simonPlayed++;gameSuccess('simon',s.sequence.length>2);
+  $('simonStatus').textContent='あれれ？ '+s.completed+'こ まで できた！ もっかい？';faceoffReact('simon','oops');return;
+ }
+ s.index++;faceoffReact('simon','nod');
+ if(s.index>=s.sequence.length){
+  s.completed=s.sequence.length;
+  if(s.sequence.length>gameStats.simonBest){gameStats.simonBest=s.sequence.length;saveGameStats();updateGameRecords()}
+  $('simonStatus').textContent='できた！ すごい！';faceoffReact('simon','cheer');setSimonPadsDisabled(true);
+  if(s.sequence.length>=16){s.active=false;s.ended=true;gameStats.simonPlayed++;gameSuccess('simon',true);$('simonStatus').textContent='16こ！ だいせいこう！';faceoffReact('simon','cheer');return}
+  gameTimer(()=>{if(simonState===s&&gameMode==='simon'){s.sequence.push(random(4));nextSimonRound()}},1100);
+ }
+}
+$('simonPads').addEventListener('click',e=>{const b=e.target.closest('[data-pad]');if(b)simonChoose(Number(b.dataset.pad))});
+$('simonStart').addEventListener('click',startSimon);
+// ② じゃんぷ：自動横スクロール。敵は上から踏む・本で自動攻撃、乗り物の間は無敵。
+// 効果時間・出現間隔は「もこもこ じゃんぷ」独自の調整値。参照作品と同一の内部数値ではない。
+const RUN_W=640,RUN_H=360,RUN_GROUND=289;
+const RUN_EFFECT_SECONDS={book:8,bike:6,fridge:6};
+const RUN_EFFECT_LABEL={book:'ほん',bike:'ばいく',fridge:'れいぞうこ'};
+// 敵は「高さ」と「行動」を組み合わせた別々の個体。原作の固有キャラクターは用いない。
+// position: down / up（上段は本体1個分）。move: 左右の往復、hop: 上下ジャンプ、shoot: 自動発射。
+const RUN_ENEMY_TYPES=[
+ // 旧「障害物」は敵に統合。画面のスクロール以外では自力で動かない。
+ {id:'jitto',name:'じっと',position:'down',move:false,hop:false,shoot:false,color:'#bd9fc5'},
+ {id:'tekuteku',name:'てくてく',position:'down',move:true,hop:false,shoot:false,color:'#81a66b'},
+ {id:'pyoko',name:'ぴょこ',position:'down',move:false,hop:true,shoot:false,color:'#eea17e'},
+ {id:'koropyon',name:'ころぴょん',position:'down',move:true,hop:true,shoot:false,color:'#ac94cd'},
+ {id:'ponho',name:'ぽんほう',position:'down',move:false,hop:false,shoot:true,color:'#dd8995'},
+ {id:'tekho',name:'てくほう',position:'down',move:true,hop:false,shoot:true,color:'#78b6bb'},
+ {id:'pyonho',name:'ぴょんほう',position:'down',move:false,hop:true,shoot:true,color:'#d5ad68'},
+ {id:'furari',name:'ふわり',position:'up',move:true,hop:false,shoot:false,color:'#92abe2'},
+ {id:'fuwaho',name:'ふわほう',position:'up',move:false,hop:false,shoot:true,color:'#c4a3d2'},
+ {id:'furaho',name:'ふらほう',position:'up',move:true,hop:false,shoot:true,color:'#7bc4bd'}
+];
+function runnerEnemyTop(en){return en.y}
+function runnerSpawnEnemy(type=choose(RUN_ENEMY_TYPES)){
+ const r=runnerState;if(!r)return null;
+ const h=type.position==='up'?30:32,w=type.position==='up'?39:37;
+ const baseY=type.position==='up'?RUN_GROUND-51-18-h:RUN_GROUND-h;
+ const en={kind:type.id,spec:type,x:RUN_W+24,w,h,y:baseY,prevY:baseY,baseY,age:0,phase:Math.random()*6.283,
+   jumpPhase:Math.random()*1.1,fireEvery:(type.position==='up'?2.75:2.4)*RUN_DIFFICULTY[r.difficulty].shoot,
+   fireIn:type.shoot?(1.1+Math.random()*1.2)*RUN_DIFFICULTY[r.difficulty].shoot:Infinity};
+ r.enemies.push(en);return en;
+}
+function runnerFireEnemy(en){
+ const r=runnerState;if(!r||!r.active)return;
+ if(en.x<r.x+80||en.x>RUN_W-15)return;
+ const y=en.y+en.h*.58;
+ r.enemyShots.push({x:en.x-8,y,prevX:en.x-8,radius:7,speed:322*RUN_DIFFICULTY[r.difficulty].bullet,color:en.spec.color});
+ r.sparks.push({x:en.x-8,y,life:.20,type:'shot'});
+}
+
+function prepRunner(){
+ lockDifficulty('runner',false);
+ const difficulty=DIFFICULTIES.includes(st.runnerDifficulty)?st.runnerDifficulty:'normal';
+ runnerState={difficulty,active:false,ended:false,x:104,y:RUN_GROUND-51,prevY:RUN_GROUND-51,vy:0,jumps:0,elapsed:0,distance:0,score:0,bonus:0,stars:0,
+  enemies:[],enemyShots:[],items:[],beams:[],sparks:[],spawnIn:1.65,itemIn:2.1,
+  power:null,powerLeft:0,beamIn:0,noticeFor:0,last:0,defeated:0};
+ $('runnerStart').textContent='はじめる';$('runnerScore').textContent='0';$('runnerStars').textContent='0';$('runnerPower').textContent='なし';
+ $('runnerBest').textContent=currentBest('runner',difficulty);
+ $('runnerStatus').textContent='はじめると もこが すすむよ';drawRunner();
+}
+function startRunner(){
+ stopGameLoop();prepRunner();runnerState.active=true;lockDifficulty('runner',true);$('runnerStart').textContent='やりなおす';
+ $('runnerStatus').textContent='タップで じゃんぷ！ うえから ふんでみて';runnerState.last=0;gameFrame(performance.now());
+}
+function runnerJump(){
+ const r=runnerState;if(gameMode!=='runner'||!r||!r.active||r.ended||r.jumps>=2)return;
+ r.vy=r.jumps===0?-655:-600;r.jumps++;
+ const jumpButton=$('runnerJump');
+ // 成功したジャンプを、すぐにボタンの色とへこみで短く伝える。
+ jumpButton.classList.remove('jump-feedback');
+ void jumpButton.offsetWidth;
+ jumpButton.classList.add('jump-feedback');
+}
+function runnerToast(msg){const r=runnerState;if(!r)return;r.noticeFor=1.35;$('runnerStatus').textContent=msg}
+function runnerDefaultStatus(){const r=runnerState;if(!r)return;
+ $('runnerStatus').textContent=r.power?(RUN_EFFECT_LABEL[r.power]+'！ あと '+Math.ceil(r.powerLeft)+'びょう'):'タップで じゃんぷ！ うえから ふんでみて';
+}
+function runnerGetPower(kind){
+ const r=runnerState;if(!r)return;
+ r.power=kind;r.powerLeft=RUN_EFFECT_SECONDS[kind];r.beamIn=.25;
+ $('runnerPower').textContent=RUN_EFFECT_LABEL[kind]+' '+Math.ceil(r.powerLeft)+'s';
+ runnerToast({book:'ほん！ じどうで ぴゅん！',bike:'ばいく！ はやい！ むてき！',fridge:'れいぞうこ！ おおきい！ むてき！'}[kind]);
+ r.sparks.push({x:r.x+27,y:r.y+19,life:.48,type:'burst'});
+}
+function runnerDefeat(enemy,kind){
+ const r=runnerState;if(!r)return;
+ const i=r.enemies.indexOf(enemy);if(i<0)return;
+ r.enemies.splice(i,1);r.defeated++;r.bonus+=15;
+ r.sparks.push({x:enemy.x+enemy.w/2,y:enemy.y+enemy.h/2,life:.48,type:'burst'});
+ if(kind==='stomp'){
+  r.y=Math.min(r.y,enemy.y-49);
+  r.vy=-470;r.jumps=0;runnerToast('ぽよん！ ふめた！');
+ }else if(kind==='beam')runnerToast('ぴゅん！ たおした！');
+ else runnerToast('どーん！ むてき！');
+}
+function runnerFinish(reason=""){
+ const r=runnerState;if(!r||r.ended)return;
+ r.ended=true;r.active=false;stopGameLoop();lockDifficulty('runner',false);gameStats.runnerPlayed++;
+ gameStats.runnerStars=Math.min(1e8,gameStats.runnerStars+r.stars);
+ gameStats.runnerBest=Math.max(gameStats.runnerBest,r.score);
+ gameStats[bestKey('runner',r.difficulty)]=Math.max(currentBest('runner',r.difficulty),r.score);
+ $('runnerStatus').textContent=(reason?reason+'  ':'')+'すすんだ '+r.score+'！ てき '+r.defeated+'たい！ '+look.name+'「もっかい とぶ？」';
+ gameSuccess('runner',r.score>=80);
+}
+function runnerRectOverlap(a,b,pad=3){return a.x+a.w-pad>b.x+pad&&a.x+pad<b.x+b.w-pad&&a.y+a.h-pad>b.y+pad&&a.y+pad<b.y+b.h-pad}
+function updateRunner(dt){
+ const r=runnerState;if(!r||!r.active)return;
+ r.elapsed+=dt;
+ if(r.noticeFor>0){r.noticeFor-=dt;if(r.noticeFor<=0)runnerDefaultStatus()}
+ if(r.power){r.powerLeft=Math.max(0,r.powerLeft-dt);if(r.powerLeft===0){r.power=null;r.beams.length=0;runnerToast('へんしん おしまい！')}}
+ const tuning=RUN_DIFFICULTY[r.difficulty];
+ const baseSpeed=Math.min(365,205+r.elapsed*2.4)*tuning.speed;
+ const speed=baseSpeed*(r.power==='bike'?1.45:1);
+ r.distance+=speed*dt;r.score=Math.floor(r.distance/12)+r.bonus;
+ r.prevY=r.y;r.vy+=1580*dt;r.y+=r.vy*dt;
+ if(r.y>=RUN_GROUND-51){r.y=RUN_GROUND-51;r.vy=0;r.jumps=0}
+ const powerInvincible=r.power==='bike'||r.power==='fridge';
+ // 旧障害物を含め、敵はすべて同じ出現・衝突処理に統合。
+ // じっとは約1/4の割合。他の敵と同時に大量発生しないよう、単一タイマーで出す。
+ r.spawnIn-=dt;
+ if(r.spawnIn<=0){
+  const kind=Math.random()<.27?RUN_ENEMY_TYPES[0]:choose(RUN_ENEMY_TYPES.slice(1));
+  // かんたんでは射撃個体が少なめ。10種類の敵は全難易度で登場できる。
+  runnerSpawnEnemy(r.difficulty==='easy'&&kind.shoot&&Math.random()>tuning.shooterChance?choose(RUN_ENEMY_TYPES.filter(t=>!t.shoot)):kind);
+  r.spawnIn=tuning.spawnMin+Math.random()*tuning.spawnRange;
+ }
+ r.itemIn-=dt;
+ if(r.itemIn<=0){
+  const roll=Math.random();const kind=roll<.46?'star':roll<.65?'book':roll<.84?'bike':'fridge';
+  // 特殊アイテムはジャンプ1回で届く高さを優先。星は高い位置にも配置。
+  const y=kind==='star'?125+random(110):175+random(65);
+  r.items.push({kind,x:RUN_W+24,y,phase:Math.random()*6.28});
+  r.itemIn=(2.0+Math.random()*1.5)*tuning.item;
+ }
+ const player={x:r.x+10,y:r.y+7,w:34,h:40};
+ for(let i=r.enemies.length-1;i>=0;i--){
+  const en=r.enemies[i],type=en.spec;en.age+=dt;en.prevY=en.y;
+  // スクロールに加えて、左右に動く敵は自分の意思で往復する。
+  en.x-=speed*(type.move ? .68 : 1.02)*dt;
+  if(type.move){en.phase+=dt*3.3;en.x+=Math.cos(en.phase)*182*dt;}
+  if(type.hop){const hop=Math.max(0,Math.sin(en.age*3.8+en.jumpPhase));en.y=en.baseY-57*hop*hop;}
+  else if(type.position==='up'){en.y=en.baseY+Math.sin(en.age*3.5+en.phase)*5;}
+  else en.y=en.baseY;
+  if(type.shoot){
+   en.fireIn-=dt;
+   if(en.fireIn<=0){runnerFireEnemy(en);en.fireIn=en.fireEvery;}
+  }
+  const top=runnerEnemyTop(en),er={x:en.x,y:top,w:en.w,h:en.h};
+  if(runnerRectOverlap(player,er,4)){
+   if(powerInvincible){runnerDefeat(en,'rush');continue}
+   // 上段も下段も、落下しながら頭を踏んだときのみ倒せる。
+   const oldFeet=r.prevY+47,feet=r.y+47;
+   if(r.vy>0&&oldFeet<=Math.max(top,en.prevY)+11&&feet>=top+1){runnerDefeat(en,'stomp');continue}
+   runnerFinish('てきに ぶつかった！');break;
+  }
+  if(en.x<-70)r.enemies.splice(i,1);
+ }
+ if(!r.active){$('runnerScore').textContent=r.score;return}
+ // 本の効果中は入力なしで自動発射。弾の寿命と命中判定は独立して処理する。
+ if(r.power==='book'){
+  r.beamIn-=dt;
+  if(r.beamIn<=0){r.beams.push({x:r.x+53,y:r.y+23,w:25,h:8});r.beamIn=.46}
+ }
+ for(let i=r.beams.length-1;i>=0;i--){const beam=r.beams[i];beam.x+=540*dt;
+  let hit=false;
+  for(let j=r.enemies.length-1;j>=0;j--){const en=r.enemies[j];const top=runnerEnemyTop(en);
+   if(runnerRectOverlap(beam,{x:en.x,y:top,w:en.w,h:en.h},2)){runnerDefeat(en,'beam');hit=true;break}
+  }
+  if(hit||beam.x>RUN_W+30)r.beams.splice(i,1);
+ }
+ // 敵の弾は発射位置から左へ直進。通常は一発で終了、無敵中は消える。
+ // 大きく飛ばしたフレームでも判定を逃さないよう、弾の移動軌跡で接触を見る。
+ for(let i=r.enemyShots.length-1;i>=0;i--){
+  const shot=r.enemyShots[i];shot.prevX=shot.x;shot.x-=(shot.speed+baseSpeed*.14)*dt;
+  const sweep={x:Math.min(shot.x,shot.prevX)-shot.radius,y:shot.y-shot.radius,
+    w:Math.abs(shot.prevX-shot.x)+shot.radius*2,h:shot.radius*2};
+  if(runnerRectOverlap(player,sweep,1)){
+   r.enemyShots.splice(i,1);
+   if(powerInvincible){r.sparks.push({x:shot.x,y:shot.y,life:.38,type:'burst'});runnerToast('むてき！ たまも へいき！');}
+   else{runnerFinish('たまに あたった！');break;}
+  }else if(shot.x<-25)r.enemyShots.splice(i,1);
+ }
+ if(!r.active){$('runnerScore').textContent=r.score;return}
+ for(let i=r.items.length-1;i>=0;i--){const item=r.items[i];item.x-=speed*dt;item.phase+=dt*5;
+  const iy=item.y+Math.sin(item.phase)*5;
+  if(Math.abs(item.x-(r.x+26))<35&&Math.abs(iy-(r.y+24))<38){
+   if(item.kind==='star'){r.stars++;r.bonus+=3;runnerToast('きらきら ひろった！')}
+   else runnerGetPower(item.kind);
+   r.items.splice(i,1);
+  }else if(item.x<-30)r.items.splice(i,1);
+ }
+ for(let i=r.sparks.length-1;i>=0;i--){r.sparks[i].life-=dt;if(r.sparks[i].life<=0)r.sparks.splice(i,1)}
+ r.score=Math.floor(r.distance/12)+r.bonus;
+ $('runnerScore').textContent=r.score;$('runnerStars').textContent=r.stars;
+ $('runnerPower').textContent=r.power?RUN_EFFECT_LABEL[r.power]+' '+Math.ceil(r.powerLeft)+'s':'なし';
+}
+function runnerPickupArt(ctx,item){
+ ctx.save();const y=item.y+Math.sin(item.phase)*5;ctx.translate(item.x,y);
+ ctx.shadowColor='rgba(60,80,70,.16)';ctx.shadowBlur=7;ctx.shadowOffsetY=2;
+ if(item.kind==='star'){
+  ctx.fillStyle='#f4c64d';ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5;const rad=i%2?7:15;ctx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad)}ctx.closePath();ctx.fill();
+ }else if(item.kind==='book'){
+  ctx.fillStyle='#e6a478';ctx.beginPath();ctx.roundRect(-16,-15,32,30,5);ctx.fill();
+  ctx.fillStyle='#fff9e3';ctx.fillRect(0,-13,12,26);ctx.strokeStyle='#b27351';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(0,15);ctx.stroke();
+ }else if(item.kind==='bike'){
+  ctx.strokeStyle='#65acb0';ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(-12,10,7,0,Math.PI*2);ctx.arc(13,10,7,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-12,10);ctx.lineTo(-1,-7);ctx.lineTo(6,10);ctx.lineTo(-12,10);ctx.moveTo(-1,-7);ctx.lineTo(13,10);ctx.moveTo(8,-9);ctx.lineTo(13,10);ctx.stroke();
+ }else if(item.kind==='fridge'){
+  ctx.fillStyle='#97d9ef';ctx.beginPath();ctx.roundRect(-14,-21,28,42,5);ctx.fill();
+  ctx.fillStyle='#e3f9ff';ctx.fillRect(-11,-17,22,15);ctx.strokeStyle='#68acc1';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(-14,-1);ctx.lineTo(14,-1);ctx.stroke();
+  ctx.fillStyle='#6297ac';ctx.fillRect(6,5,3,9);
+ }
+ ctx.restore();
+}
+function drawRunner(){
+ const canvas=$('runnerCanvas'),ctx=canvas.getContext('2d');if(!ctx)return;
+ const r=runnerState,dist=r?.distance||0;
+ const bg=ctx.createLinearGradient(0,0,0,RUN_H);bg.addColorStop(0,'#e6f4ef');bg.addColorStop(1,'#f8edcf');
+ ctx.fillStyle=bg;ctx.fillRect(0,0,RUN_W,RUN_H);
+ for(let i=0;i<5;i++){
+  const x=((i*177-dist*.08)%(RUN_W+230)+(RUN_W+230))%(RUN_W+230)-110,y=46+(i%3)*31;
+  ctx.fillStyle='rgba(255,255,255,.74)';ctx.beginPath();ctx.ellipse(x,y,51,20,0,0,Math.PI*2);ctx.ellipse(x-25,y+8,35,17,0,0,7);ctx.fill();
+ }
+ ctx.fillStyle='#d4e7d1';ctx.beginPath();ctx.moveTo(0,RUN_GROUND);
+ for(let x=0;x<=RUN_W;x+=18)ctx.lineTo(x,RUN_GROUND-28-11*Math.sin((x+dist*.16)/69));
+ ctx.lineTo(RUN_W,RUN_GROUND);ctx.fill();
+ ctx.fillStyle='#a7d7bd';ctx.fillRect(0,RUN_GROUND,RUN_W,RUN_H-RUN_GROUND);
+ ctx.fillStyle='#81bca0';ctx.fillRect(0,RUN_GROUND,RUN_W,5);ctx.fillStyle='#e4f1d4';
+ for(let i=0;i<22;i++){const x=((i*43-dist)%(RUN_W+40)+(RUN_W+40))%(RUN_W+40);ctx.fillRect(x,RUN_GROUND+32,22,4)}
+ if(r){
+  for(const en of r.enemies){
+   const type=en.spec,cx=en.x+en.w/2,cy=en.y+en.h/2;
+   ctx.save();ctx.translate(cx,cy);
+   // 高い位置の敵には影を付け、地上の敵と区別する。
+   if(type.position==='up'){
+    ctx.fillStyle='rgba(74,89,91,.12)';ctx.beginPath();ctx.ellipse(0,18,22,4,0,0,Math.PI*2);ctx.fill();
+   }
+   ctx.fillStyle=type.color;ctx.beginPath();ctx.ellipse(0,0,en.w*.49,en.h*.48,0,0,Math.PI*2);ctx.fill();
+   if(type.hop){ctx.fillStyle='rgba(255,255,255,.33)';ctx.beginPath();ctx.ellipse(-9,-11,7,5,-.4,0,Math.PI*2);ctx.fill();}
+   if(type.move){ctx.strokeStyle=type.color;ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-10,10);ctx.lineTo(-14,16);ctx.moveTo(10,10);ctx.lineTo(14,16);ctx.stroke();}
+   if(type.id==='jitto'){
+    // じっとは一目で敵だとわかるよう、他の敵と同じ体・顔を使う。
+    ctx.fillStyle='rgba(255,255,255,.34)';ctx.beginPath();ctx.ellipse(-8,-10,8,4,-.4,0,Math.PI*2);ctx.fill();
+   }
+   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-6,-3,3.5,0,Math.PI*2);ctx.arc(6,-3,3.5,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#47535b';ctx.beginPath();ctx.arc(-6,-2,1.4,0,Math.PI*2);ctx.arc(6,-2,1.4,0,Math.PI*2);ctx.fill();
+   if(type.shoot){
+    ctx.fillStyle='#ece9ee';ctx.beginPath();ctx.roundRect(-en.w*.57,3,10,10,3);ctx.fill();
+    ctx.strokeStyle='#a45c79';ctx.lineWidth=2;ctx.strokeRect(-en.w*.57,4,7,8);
+    if(en.fireIn<.42){ctx.fillStyle='rgba(255,237,133,.88)';ctx.beginPath();ctx.arc(-en.w*.62,8,5+(0.42-en.fireIn)*9,0,Math.PI*2);ctx.fill();}
+   }
+   ctx.restore();
+  }
+  for(const shot of r.enemyShots){
+   ctx.save();ctx.strokeStyle='rgba(167,83,112,.3)';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(shot.x+14,shot.y);ctx.lineTo(shot.x+5,shot.y);ctx.stroke();
+   ctx.fillStyle='#ee759e';ctx.beginPath();ctx.arc(shot.x,shot.y,shot.radius,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#fff8e3';ctx.beginPath();ctx.arc(shot.x-2.4,shot.y-2.3,2.2,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  for(const item of r.items)runnerPickupArt(ctx,item);
+  for(const beam of r.beams){ctx.save();ctx.fillStyle='#6a9ff8';ctx.shadowColor='#b2d4ff';ctx.shadowBlur=10;ctx.beginPath();ctx.roundRect(beam.x,beam.y,beam.w,beam.h,4);ctx.fill();ctx.restore()}
+  for(const spark of r.sparks){ctx.save();ctx.globalAlpha=Math.min(1,spark.life*2);ctx.strokeStyle='#f7c960';ctx.lineWidth=4;
+   ctx.beginPath();ctx.arc(spark.x,spark.y,(.55-spark.life)*40,0,Math.PI*2);ctx.stroke();ctx.restore()}
+  ctx.save();if(r.active&&r.jumps===0)ctx.translate(0,Math.sin(r.elapsed*19)*2);
+  if(r.power==='bike'){
+   ctx.strokeStyle='#529fa4';ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(r.x+14,r.y+47,11,0,Math.PI*2);ctx.arc(r.x+41,r.y+47,11,0,Math.PI*2);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(r.x+14,r.y+47);ctx.lineTo(r.x+28,r.y+31);ctx.lineTo(r.x+41,r.y+47);ctx.stroke();
+  }
+  if(r.power==='fridge'){
+   ctx.strokeStyle='rgba(113,201,227,.75)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x+26,r.y+22,38,0,Math.PI*2);ctx.stroke();
+   ctx.translate(-12,-13);gameDrawAvatar(ctx,r.x-2,r.y-7,82,84);
+  }else gameDrawAvatar(ctx,r.x-2,r.y-7,58,60);
+  if(r.power==='book'){
+   ctx.fillStyle='#e6a478';ctx.beginPath();ctx.roundRect(r.x+42,r.y-12,19,17,4);ctx.fill();
+   ctx.strokeStyle='#fff8e8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(r.x+51,r.y-10);ctx.lineTo(r.x+51,r.y+3);ctx.stroke();
+  }
+  ctx.restore();
+  if(r.power){ctx.save();ctx.fillStyle='rgba(255,255,255,.86)';ctx.beginPath();ctx.roundRect(12,10,118,30,12);ctx.fill();
+   ctx.fillStyle='#537e72';ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText(RUN_EFFECT_LABEL[r.power]+' '+Math.ceil(r.powerLeft)+'s',71,31);ctx.restore()}
+ }
+}
+function runnerFrame(t){
+ const r=runnerState;if(!r||!r.active||gameMode!=='runner')return;
+ if(!r.last)r.last=t;const dt=Math.min(.035,(t-r.last)/1000);r.last=t;
+ updateRunner(dt);drawRunner();if(r.active&&!gamePaused)gameRAF=requestAnimationFrame(runnerFrame);
+}
+$('runnerCanvas').addEventListener('pointerdown',e=>{e.preventDefault();runnerJump()});
+const jumpPressButton=$('runnerJump');
+jumpPressButton.addEventListener('pointerdown',()=>jumpPressButton.classList.add('is-pressed'));
+for(const eventName of ['pointerup','pointercancel','pointerleave','lostpointercapture']){
+ jumpPressButton.addEventListener(eventName,()=>jumpPressButton.classList.remove('is-pressed'));
+}
+jumpPressButton.addEventListener('blur',()=>jumpPressButton.classList.remove('is-pressed'));
+jumpPressButton.addEventListener('animationend',e=>{if(e.animationName==='runner-jump-confirm')jumpPressButton.classList.remove('jump-feedback')});
+jumpPressButton.addEventListener('click',runnerJump);$('runnerStart').addEventListener('click',startRunner);
+// ③ めいろ：必ず全マスがつながる迷路を自動生成する。
+const MAZE_W=15,MAZE_H=13,MAZE_TILE=30;
+const MAZE_DIRECTIONS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+const mazeKey=(x,y)=>x+','+y;
+const MAZE_TYPES=[
+ {id:'twisty',name:'くねくね'},
+ {id:'open',name:'ひろびろ'},
+ {id:'branch',name:'えだわかれ'},
+ {id:'loop',name:'わっか'}
+];
+let lastMazeType='';
+function mazeEmptyGrid(){return Array.from({length:MAZE_H},()=>Array(MAZE_W).fill(1))}
+function mazeOddNeighbors(x,y){
+ const dirs=[[2,0],[-2,0],[0,2],[0,-2]];
+ return dirs.filter(([dx,dy])=>x+dx>0&&x+dx<MAZE_W-1&&y+dy>0&&y+dy<MAZE_H-1)
+  .map(([dx,dy])=>({x:x+dx,y:y+dy,dx,dy}));
+}
+// 奥まで曲がりながら進む、細い通路の迷路。基本通路は必ず接続される。
+function mazeCarveDepth(grid,straightBias=0){
+ grid[1][1]=0;const stack=[{x:1,y:1,dx:0,dy:0}];
+ while(stack.length){
+  const cur=stack[stack.length-1];
+  const options=mazeOddNeighbors(cur.x,cur.y).filter(n=>grid[n.y][n.x]===1);
+  if(!options.length){stack.pop();continue}
+  const ahead=options.find(n=>n.dx===cur.dx&&n.dy===cur.dy);
+  const next=ahead&&Math.random()<straightBias?ahead:choose(options);
+  grid[cur.y+next.dy/2][cur.x+next.dx/2]=0;grid[next.y][next.x]=0;
+  stack.push(next);
+ }
+}
+// 分岐を多めにするための randomized Prim（上と異なる生成アルゴリズム）。
+function mazeCarveBranches(grid){
+ grid[1][1]=0;
+ const frontier=mazeOddNeighbors(1,1).map(n=>({...n}));
+ while(frontier.length){
+  const pick=random(frontier.length),edge=frontier.splice(pick,1)[0];
+  if(grid[edge.y][edge.x]===0)continue;
+  grid[(edge.y-edge.dy/2)][(edge.x-edge.dx/2)]=0;grid[edge.y][edge.x]=0;
+  for(const n of mazeOddNeighbors(edge.x,edge.y))if(grid[n.y][n.x]===1)frontier.push(n);
+ }
+}
+// 通路同士を結ぶ壁だけを開く。開けたセルが孤立しないのでループが増える。
+function mazeAddConnections(grid,num){
+ for(let i=0;i<num;i++){
+  const walls=[];
+  for(let y=1;y<MAZE_H-1;y++)for(let x=1;x<MAZE_W-1;x++){
+   if(grid[y][x]!==1)continue;
+   if((grid[y][x-1]===0&&grid[y][x+1]===0)||
+      (grid[y-1][x]===0&&grid[y+1][x]===0))walls.push([x,y]);
+  }
+  if(!walls.length)break;
+  const [x,y]=choose(walls);grid[y][x]=0;
+ }
+}
+// 小部屋を中心から広げる。既存の通路に必ず接続する。
+function mazeAddRooms(grid,count){
+ for(let i=0;i<count;i++){
+  const cx=3+2*random(5),cy=3+2*random(4);
+  for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)grid[y][x]=0;
+ }
+}
+function mazeReachableCount(grid){
+ if(grid[1][1]!==0)return 0;
+ const seen=new Set([mazeKey(1,1)]),queue=[[1,1]];
+ for(let i=0;i<queue.length;i++){
+  const [x,y]=queue[i];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx,ny=y+dy,k=mazeKey(nx,ny);
+   if(nx<=0||nx>=MAZE_W-1||ny<=0||ny>=MAZE_H-1||grid[ny][nx]!==0||seen.has(k))continue;
+   seen.add(k);queue.push([nx,ny]);
+  }
+ }
+ return seen.size;
+}
+function mazeGridValid(grid){
+ if(!grid||grid.length!==MAZE_H||grid.some(row=>row.length!==MAZE_W))return false;
+ for(let x=0;x<MAZE_W;x++)if(grid[0][x]!==1||grid[MAZE_H-1][x]!==1)return false;
+ for(let y=0;y<MAZE_H;y++)if(grid[y][0]!==1||grid[y][MAZE_W-1]!==1)return false;
+ let passages=0;
+ for(const row of grid)for(const c of row)if(c===0)passages++;
+ return passages>=65&&passages<=130&&mazeReachableCount(grid)===passages;
+}
+function makeMaze(forceType=null){
+ const pool=MAZE_TYPES.filter(t=>t.id!==lastMazeType);
+ const type=forceType&&MAZE_TYPES.find(t=>t.id===forceType)||choose(pool.length?pool:MAZE_TYPES);
+ for(let attempt=0;attempt<16;attempt++){
+  const grid=mazeEmptyGrid();
+  if(type.id==='branch'){
+   mazeCarveBranches(grid);mazeAddConnections(grid,random(3));
+  }else{
+   mazeCarveDepth(grid,type.id==='twisty'?.67:.16);
+   if(type.id==='twisty')mazeAddConnections(grid,2+random(3));
+   if(type.id==='loop')mazeAddConnections(grid,16+random(7));
+   if(type.id==='open'){
+    mazeAddRooms(grid,3+random(2));mazeAddConnections(grid,7+random(6));
+   }
+  }
+  if(mazeGridValid(grid)){lastMazeType=type.id;return {grid,type}}
+ }
+ // 念のためのフォールバック。孤立したぽよだまを生成しない。
+ const grid=mazeEmptyGrid();mazeCarveDepth(grid);
+ lastMazeType='twisty';return {grid,type:MAZE_TYPES[0]};
+}
+function mazeWalkable(grid,x,y){return x>=0&&y>=0&&x<MAZE_W&&y<MAZE_H&&grid[y][x]===0}
+function mazeDistance(grid,sx,sy,tx,ty){
+ if(sx===tx&&sy===ty)return 0;
+ const queue=[[sx,sy,0]],seen=new Set([mazeKey(sx,sy)]);
+ for(let i=0;i<queue.length;i++){const [x,y,d]=queue[i];for(const [dx,dy] of Object.values(MAZE_DIRECTIONS)){
+  const nx=x+dx,ny=y+dy,k=mazeKey(nx,ny);
+  if(!mazeWalkable(grid,nx,ny)||seen.has(k))continue;
+  if(nx===tx&&ny===ty)return d+1;
+  seen.add(k);queue.push([nx,ny,d+1]);
+ }}return 999;
+}
+function mazeFarthest(grid,exclude=[]){
+ // 先に距離を一度だけ計算。敵3体でも生成が重くならないようにする。
+ const distance=new Map([[mazeKey(1,1),0]]),queue=[[1,1]];
+ for(let i=0;i<queue.length;i++){
+  const [x,y]=queue[i],d=distance.get(mazeKey(x,y));
+  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS)){
+   const nx=x+dx,ny=y+dy,k=mazeKey(nx,ny);
+   if(mazeWalkable(grid,nx,ny)&&!distance.has(k)){distance.set(k,d+1);queue.push([nx,ny])}
+  }
+ }
+ const unused=queue.filter(([x,y])=>exclude.every(([ex,ey])=>x!==ex||y!==ey));
+ const farFromStart=unused.filter(([x,y])=>Math.abs(x-1)+Math.abs(y-1)>=9);
+ const all=farFromStart.length?farFromStart:unused;
+ const minSep=(cell)=>Math.min(...exclude.map(([x,y])=>Math.abs(cell[0]-x)+Math.abs(cell[1]-y)));
+ const preferred=all.filter(c=>minSep(c)>=10),relaxed=all.filter(c=>minSep(c)>=6);
+ const cells=preferred.length?preferred:relaxed.length?relaxed:all;
+ if(!cells.length)return [1,1];
+ cells.sort((a,b)=>distance.get(mazeKey(b[0],b[1]))-distance.get(mazeKey(a[0],a[1])));
+ return cells[random(Math.min(5,cells.length))];
+}
+function startMaze(begin=true){
+ stopGameLoop();
+ const difficulty=DIFFICULTIES.includes(st.mazeDifficulty)?st.mazeDifficulty:'normal';
+ const tuning=MAZE_DIFFICULTY[difficulty];
+ lockDifficulty('maze',begin);
+ const {grid,type}=makeMaze(),pellets=new Set(),power=new Set();
+ for(let y=0;y<MAZE_H;y++)for(let x=0;x<MAZE_W;x++)if(grid[y][x]===0&&!(x===1&&y===1))pellets.add(mazeKey(x,y));
+ const starts=[[1,1]],enemyStarts=[];
+ for(let i=0;i<tuning.enemies;i++){
+  const cell=mazeFarthest(grid,starts);
+  enemyStarts.push(cell);starts.push(cell);
+ }
+ const far=[...pellets].filter(p=>{const [x,y]=p.split(',').map(Number);return Math.abs(x-1)+Math.abs(y-1)>=11});
+ for(let i=0;i<Math.min(3,far.length);i++){const j=random(far.length);power.add(far.splice(j,1)[0])}
+ mazeState={difficulty,grid,mazeType:type.id,mazeTypeName:type.name,pellets,power,hero:{x:1,y:1},
+  enemies:enemyStarts.map(([x,y])=>({x,y,sx:x,sy:y})),
+  desired:'right',direction:'right',lives:tuning.lives,score:0,shield:0,invincible:0,stepClock:0,enemyClock:0,last:0,active:begin,ended:false};
+ $('mazeType').textContent=type.name;
+ $('mazeStart').textContent=begin?'はじめから':'はじめる';
+ $('mazeBest').textContent=currentBest('maze',difficulty);
+ $('mazeStatus').textContent=begin?type.name+'！ ぽよだまを あつめよう！':'はじめると もこが うごくよ';
+ updateMazeHUD();drawMaze();if(begin)gameFrame(performance.now());
+}
+function setMazeDirection(dir){if(gameMode==='maze'&&mazeState?.active&&MAZE_DIRECTIONS[dir])mazeState.desired=dir}
+function updateMazeHUD(){
+ if(!mazeState)return;const m=mazeState;
+ $('mazeRemain').textContent=m.pellets.size;$('mazeLives').textContent=m.lives;
+ $('mazeScore').textContent=m.score;$('mazeBest').textContent=Math.max(currentBest('maze',m.difficulty),m.score);
+}
+function endMaze(won){
+ const m=mazeState;if(!m||m.ended)return;m.ended=true;m.active=false;stopGameLoop();lockDifficulty('maze',false);
+ gameStats.mazePlayed++;if(won)gameStats.mazeClears++;
+ gameStats.mazeBest=Math.max(gameStats.mazeBest,m.score);
+ gameStats[bestKey('maze',m.difficulty)]=Math.max(currentBest('maze',m.difficulty),m.score);
+ $('mazeStatus').textContent=won?'ぜんぶ あつめた！ '+look.name+'「やったぁ！」':look.name+'「あれれ……もっかい？」';
+ $('mazeStart').textContent=won?'つぎの めいろ':'はじめから';
+ gameSuccess('maze',won);updateMazeHUD();
+}
+function collectMazePellet(){
+ const m=mazeState,k=mazeKey(m.hero.x,m.hero.y);
+ if(m.pellets.delete(k)){
+  m.score+=m.power.has(k)?50:10;
+  if(m.power.delete(k)){$('mazeStatus').textContent='きらきら！ いまは つよいよ！';m.shield=MAZE_DIFFICULTY[m.difficulty].powerSeconds}
+  if(m.pellets.size===0){endMaze(true);return}
+  if(m.score>currentBest('maze',m.difficulty)){
+    gameStats.mazeBest=Math.max(gameStats.mazeBest,m.score);
+    gameStats[bestKey('maze',m.difficulty)]=m.score;saveGameStats()
+   }
+ }
+}
+function stepMazeHero(){
+ const m=mazeState;if(!m?.active)return;
+ const wants=MAZE_DIRECTIONS[m.desired],move=MAZE_DIRECTIONS[m.direction];
+ if(wants&&mazeWalkable(m.grid,m.hero.x+wants[0],m.hero.y+wants[1]))m.direction=m.desired;
+ const [dx,dy]=MAZE_DIRECTIONS[m.direction];
+ if(mazeWalkable(m.grid,m.hero.x+dx,m.hero.y+dy)){m.hero.x+=dx;m.hero.y+=dy;collectMazePellet()}
+ checkMazeCollision();
+}
+function stepMazeEnemies(){
+ const m=mazeState;if(!m?.active)return;
+ for(const enemy of m.enemies){
+  const options=[];
+  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS))if(mazeWalkable(m.grid,enemy.x+dx,enemy.y+dy))options.push([enemy.x+dx,enemy.y+dy]);
+  if(options.length){
+   options.sort((a,b)=>mazeDistance(m.grid,a[0],a[1],m.hero.x,m.hero.y)-mazeDistance(m.grid,b[0],b[1],m.hero.x,m.hero.y));
+   const chooseChase=Math.random()<MAZE_DIFFICULTY[m.difficulty].chase;const dest=chooseChase?options[0]:options[random(options.length)];enemy.x=dest[0];enemy.y=dest[1];
+  }
+ }
+ checkMazeCollision();
+}
+function checkMazeCollision(){
+ const m=mazeState;if(!m?.active)return;
+ for(const e of m.enemies){
+  if(e.x!==m.hero.x||e.y!==m.hero.y)continue;
+  if(m.shield>0){m.score+=70;e.x=e.sx;e.y=e.sy;$('mazeStatus').textContent=look.name+'「やったぁ！ ぽよ！」';continue}
+  if(m.invincible>0)return;
+  m.lives--;m.invincible=2.5;
+  if(m.lives<=0){endMaze(false);return}
+  $('mazeStatus').textContent='おっと！ あと '+m.lives+'かい！';
+  m.hero={x:1,y:1};m.direction='right';m.desired='right';m.enemies.forEach(en=>{en.x=en.sx;en.y=en.sy});
+  return;
+ }
+}
+function updateMaze(dt){
+ const m=mazeState;if(!m?.active)return;
+ m.shield=Math.max(0,m.shield-dt);m.invincible=Math.max(0,m.invincible-dt);
+ m.stepClock+=dt;m.enemyClock+=dt;
+ const tuning=MAZE_DIFFICULTY[m.difficulty];
+ if(m.stepClock>=tuning.heroStep){m.stepClock=0;stepMazeHero()}
+ if(m.active&&m.enemyClock>=tuning.enemyStep){m.enemyClock=0;stepMazeEnemies()}
+ updateMazeHUD();
+}
+function drawMaze(){
+ const canvas=$('mazeCanvas'),ctx=canvas.getContext('2d');if(!ctx)return;
+ const m=mazeState;ctx.fillStyle='#f0f6eb';ctx.fillRect(0,0,canvas.width,canvas.height);
+ if(!m)return;
+ for(let y=0;y<MAZE_H;y++)for(let x=0;x<MAZE_W;x++){
+  const xx=x*MAZE_TILE,yy=y*MAZE_TILE,k=mazeKey(x,y);
+  if(m.grid[y][x]===1){ctx.fillStyle='#a8c8bd';ctx.beginPath();ctx.roundRect(xx+1,yy+1,28,28,6);ctx.fill();}
+  else{
+   ctx.fillStyle='#fcfff9';ctx.fillRect(xx,yy,30,30);
+   if(m.pellets.has(k)){
+    ctx.fillStyle=m.power.has(k)?'#f1bd55':'#97c0ad';ctx.beginPath();ctx.arc(xx+15,yy+15,m.power.has(k)?7:3.2,0,Math.PI*2);ctx.fill();
+   }
+  }
+ }
+ for(let i=0;i<m.enemies.length;i++){
+  const e=m.enemies[i],xx=e.x*30+15,yy=e.y*30+16;
+  ctx.fillStyle=i===0?'#d49dbd':'#9caedc';ctx.beginPath();ctx.arc(xx,yy,11,Math.PI,0);ctx.lineTo(xx+11,yy+8);ctx.quadraticCurveTo(xx+5,yy+12,xx,yy+8);ctx.quadraticCurveTo(xx-5,yy+12,xx-11,yy+8);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(xx-4,yy-2,2.3,0,7);ctx.arc(xx+4,yy-2,2.3,0,7);ctx.fill();
+ }
+ if(m.invincible<=0||Math.floor(m.invincible*7)%2===0){
+  if(m.shield>0){ctx.strokeStyle='#f0c357';ctx.lineWidth=3;ctx.beginPath();ctx.arc(m.hero.x*30+15,m.hero.y*30+15,16,0,7);ctx.stroke()}
+  gameDrawAvatar(ctx,m.hero.x*30+1,m.hero.y*30+1,28,28);
+ }
+}
+function mazeFrame(t){
+ const m=mazeState;if(!m||!m.active||gameMode!=='maze')return;
+ if(!m.last)m.last=t;const dt=Math.min(.035,(t-m.last)/1000);m.last=t;
+ updateMaze(dt);drawMaze();if(m.active&&!gamePaused)gameRAF=requestAnimationFrame(mazeFrame);
+}
+function gameFrame(t){if(gamePaused)return;if(gameMode==='runner')runnerFrame(t);else if(gameMode==='maze')mazeFrame(t)}
+function beginOrRestartMaze(){
+ const m=mazeState;
+ // 選択画面に表示された迷路を、そのまま遊び始める。
+ if(m&&!m.active&&!m.ended){
+  m.active=true;m.last=0;m.stepClock=0;m.enemyClock=0;
+  lockDifficulty('maze',true);
+  $('mazeStart').textContent='はじめから';
+  $('mazeStatus').textContent=m.mazeTypeName+'！ ぽよだまを あつめよう！';
+  gameFrame(performance.now());return;
+ }
+ // クリア後は次の迷路、プレイ中は新しい迷路で再挑戦。
+ startMaze(true);
+}
+$('mazeStart').addEventListener('click',beginOrRestartMaze);
+$('gameMaze').addEventListener('click',e=>{const b=e.target.closest('[data-dir]');if(b)setMazeDirection(b.dataset.dir)});
+let mazeTouch=null;
+$('mazeCanvas').addEventListener('pointerdown',e=>{mazeTouch={x:e.clientX,y:e.clientY};e.preventDefault()});
+$('mazeCanvas').addEventListener('pointerup',e=>{
+ if(!mazeTouch)return;
+ const dx=e.clientX-mazeTouch.x,dy=e.clientY-mazeTouch.y;mazeTouch=null;
+ if(Math.abs(dx)<12&&Math.abs(dy)<12)return;
+ setMazeDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));
+ e.preventDefault();
+});
+$('mazeCanvas').addEventListener('pointercancel',()=>mazeTouch=null);
+document.addEventListener('visibilitychange',()=>{
+ if($('gameScreen').hidden)return;
+ if(document.hidden){gamePaused=true;stopGameLoop();
+  if(gameMode==='simon'&&simonState?.active){clearGameTimers();simonState.active=false;simonState.ended=true;setSimonPadsDisabled(true);$('simonStatus').textContent='ちゅうだんしたよ。もういちど はじめてね'}
+ }else{gamePaused=false;if(gameMode==='runner'&&runnerState?.active){runnerState.last=0;gameFrame(performance.now())}
+  else if(gameMode==='maze'&&mazeState?.active){mazeState.last=0;gameFrame(performance.now())}}
+});
+
+syncPetIdentity();
+
+// すべての記録を一括で持ち運ぶ。自動保存とは独立し、保存が禁止された閲覧環境でも動く。
+const ALL_DATA_KEYS=[KEY,LOOK_KEY,WORD_KEY,COIN_KEY,ECHO_KEY,QUESTION_KEY,KEEP_KEY,GAME_KEY];
+const ALL_SAVE_KIND='moko-all-data';
+let pendingDataAction=null;
+function allDataSnapshot(){
+ tidyEchoes();
+ return {
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.21',savedAt:new Date().toISOString(),
+  state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
+  appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
+  coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
+  keepsakes:keepsakes.map(k=>({...k,days:[...k.days]})),
+  question:pendingQuestion?{...pendingQuestion,words:[...pendingQuestion.words],expires:questionExpiry}:null,
+  sleeping:asleep, games:{...gameStats}
+ };
+}
+function downloadAllData(){
+ const payload=allDataSnapshot(),blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ const d=new Date(),pad=n=>String(n).padStart(2,'0');
+ a.href=url;a.download='mokobotto_all_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes())+'.json';
+ document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ $('dataStatus').textContent='保存ファイルのダウンロードを開始しました。端末のダウンロード先をご確認ください。';
+}
+function validFullState(raw){
+ if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('state');
+ const result={...defaults};
+ for(const k of Object.keys(defaults)){
+  const v=raw[k];
+  if(typeof defaults[k]==='boolean'){
+   if(v===undefined&&k==='keepsakes'){result[k]=true;continue}
+   if(typeof v!=='boolean')throw Error('setting');result[k]=v;
+  }else if(k==='pace'){
+   if(!['slow','normal','often'].includes(v))throw Error('pace');result[k]=v;
+  }else if(k==='runnerDifficulty'||k==='mazeDifficulty'){
+   // v1.5.20までの一括セーブには難易度設定がないため、ふつうを引き継ぐ。
+   if(v===undefined){result[k]='normal';continue}
+   if(!['easy','normal','hard'].includes(v))throw Error('difficulty');result[k]=v;
+  }else{
+   if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw Error('number');
+   const upper=['warmth','energy','curiosity'].includes(k)?100:k.startsWith('temper')?90:k==='lastSeen'?Date.now()+86400000:1e9;
+   if(v>upper)throw Error('number');result[k]=v;
+  }
+ }
+ return result;
+}
+function validateAllData(data){
+ if(!data||data.kind!==ALL_SAVE_KIND||![1,2].includes(data.version))throw Error('format');
+ const appearance=normalizeLook(data.appearance);if(!appearance)throw Error('appearance');
+ const state=validFullState(data.state);
+ if(!Array.isArray(data.words)||data.words.length>MAX_WORDS||!Array.isArray(data.coinages)||data.coinages.length>COIN_LIMIT||
+    !Array.isArray(data.echoes)||data.echoes.length>ECHO_LIMIT||typeof data.sleeping!=='boolean')throw Error('size');
+ const words=data.words.map(raw=>normalizeMemory(raw));
+ if(words.some(m=>!m)||new Set(words.map(m=>m.word)).size!==words.length)throw Error('words');
+ const savedCoins=data.coinages.map(raw=>normalizeCoinage(raw,appearance.name));
+ if(savedCoins.some(c=>!c)||new Set(savedCoins.map(c=>c.word)).size!==savedCoins.length)throw Error('coinages');
+ const keepItems=[];
+ if(data.version===2){
+  if(!Array.isArray(data.keepsakes)||data.keepsakes.length>KEEP_TOTAL)throw Error('keepsakes');
+  const seen=new Set();
+  for(const row of data.keepsakes){
+   // 保存ファイル由来の言葉は検証し、重複も取り込まない。
+   const safe=normalizeKeepsake(row,savedCoins,words);if(!safe)throw Error('keepsakes');
+   const id=[safe.type,safe.subject,safe.detail].join('|');if(seen.has(id))throw Error('keepsakes');
+   seen.add(id);keepItems.push(safe);
+  }
+ }
+ const time=Date.now();
+ const echoItems=[];
+ for(const x of data.echoes){
+  if(!x||typeof x!=='object'||!echoWord(x.subject)||(!echoWord(x.detail)&&x.detail!=='')||
+     !['where','relation','mention'].includes(x.kind)||
+     ![x.created,x.due,x.expires].every(v=>typeof v==='number'&&Number.isFinite(v)))throw Error('echoes');
+  if(echoValid(x,time))echoItems.push({...x});
+ }
+ let question=null;
+ if(data.question!==null){
+  const q=data.question;
+  if(!q||typeof q!=='object'||!['relation','where','favorite'].includes(q.type)||
+     typeof q.prompt!=='string'||q.prompt.length>32||!Array.isArray(q.words)||q.words.length!==3||
+     q.words.some(w=>typeof w!=='string'||w.length>30)||typeof q.expires!=='number'||!Number.isFinite(q.expires))throw Error('question');
+  if(q.expires>time&&q.expires<time+110000&&state.learn&&state.questions&&!data.sleeping&&
+     (q.type==='favorite'||words.some(w=>w.word===q.word))){
+   question={type:q.type,word:q.word,link:q.link,prompt:q.prompt,words:[...q.words],depth:q.depth===1?1:0,expires:q.expires};
+  }
+ }
+ return {appearance,state,words,coinages:savedCoins,echoes:echoItems,keepsakes:keepItems,question,sleeping:data.sleeping,games:normalizeGameStats(data.games,true)};
+}
+function persistAllData(){
+ let ok=true;
+ const values=[[KEY,st],[LOOK_KEY,look],[WORD_KEY,memories],[COIN_KEY,coinages],
+  [ECHO_KEY,echoes.length?echoes:null],[QUESTION_KEY,pendingQuestion?{...pendingQuestion,expires:questionExpiry}:null],[KEEP_KEY,keepsakes],[GAME_KEY,gameStats]];
+ for(const [key,val] of values){
+  try{if(val===null)localStorage.removeItem(key);else localStorage.setItem(key,JSON.stringify(val))}
+  catch{ok=false}
+ }
+ wordStorageOK=ok;$('storageWarning').hidden=ok;return ok;
+}
+function refreshAfterFullChange(){
+ syncPetIdentity();
+ $('idleToggle').setAttribute('aria-checked',String(st.idle));
+ $('soloToggle').setAttribute('aria-checked',String(st.solo));
+ $('learnToggle').setAttribute('aria-checked',String(st.learn));
+ $('questionToggle').setAttribute('aria-checked',String(st.questions));
+ $('followToggle').setAttribute('aria-checked',String(st.followUp));
+ $('echoToggle').setAttribute('aria-checked',String(st.echo));
+ $('keepsakeToggle').setAttribute('aria-checked',String(st.keepsakes));
+ $('coinToggle').setAttribute('aria-checked',String(st.coinages));
+ $('paceSelect').value=st.pace;syncDifficultyControls();
+ $('robotWrap').classList.toggle('sleep',asleep);
+ updateMood();updateTemperament();renderWordbook();renderCoinages();renderKeepsakes();showQuestion();updateGameRecords();
+}
+function clearTransientConversation(){
+ // 会話ログ全文は保存対象ではないため、別の記録を読み込んだ時は前の発言を残さない。
+ $('chatLog').replaceChildren();
+ const greeting=document.createElement('div');greeting.className='chat-line';greeting.dataset.defaultGreeting='true';greeting.textContent='もこ　「ん？　おはなし？」';
+ $('chatLog').append(greeting);
+ for(const id of ['chatInput','teachInput','connectFrom','connectTo'])$(id).value='';
+ for(const id of ['teachFeedback','connectFeedback'])$(id).textContent='';
+}
+function restoreAllData(data){
+ stopSoloPlay();cancelFollowUp();clearTimeout(autoTimer);clearTimeout(changeTimer);clearTimeout(reactionTimer);
+ clearTransientConversation();
+ Object.keys(st).forEach(k=>{if(!(k in defaults))delete st[k]});
+ Object.assign(st,data.state);
+ gameStats={...data.games};closeGame();
+ look={...data.appearance};memories=data.words;coinages=data.coinages;echoes=data.echoes;keepsakes=data.keepsakes;pruneKeepsakes();
+ pendingQuestion=data.question?{...data.question}:null;
+ questionExpiry=data.question?.expires||0;questionIdleCount=0;asleep=data.sleeping;
+ if(pendingQuestion)delete pendingQuestion.expires;
+ questionCooldown=Date.now()+65000;
+ refreshAfterFullChange();
+ const ok=persistAllData();
+ $('dataStatus').textContent=ok?'すべてのデータを読み込みました。今の記録を置き換えています。':'読み込みました。ただし、この開き方では自動保存できません。必ず「すべて保存」でファイルを残してください。';
+ if(!look.created){closePanel();openCreator(false)}
+ else{speakWords(asleep?['すぅ…','むにゃ','ねんね']:['あのね',look.name,'おかえり'],asleep?'sleepy':'happy',false);scheduleIdle(true)}
+}
+function resetAllData(){
+ stopSoloPlay();cancelFollowUp();clearTimeout(autoTimer);clearTimeout(changeTimer);clearTimeout(reactionTimer);
+ clearTransientConversation();
+ // moko以外の保存領域には触れず、このゲームが使っているキーだけを消す。
+ for(const key of ALL_DATA_KEYS){try{localStorage.removeItem(key)}catch{}}
+ Object.keys(st).forEach(k=>delete st[k]);Object.assign(st,{...defaults});
+ look={...DEFAULT_LOOK};memories=[];coinages=[];echoes=[];keepsakes=[];gameStats={...DEFAULT_GAME_STATS};closeGame();
+ pendingQuestion=null;questionExpiry=0;questionIdleCount=0;questionCooldown=Date.now()+65000;
+ asleep=false;lastCoinWord='';lastMemoryIdleWord='';contextTopic=null;contextUses=0;lastIdle=-1;lastSpeech=['あかい','まる','すき'];
+ $('wordbookTip').textContent='会話から言葉を覚えます。';
+ $('coinageFeedback').textContent='言葉ができたら、なでなでやおやつで遊んでみてね。';
+ refreshAfterFullChange();
+ closePanel();openCreator(false);
+ // 初回の出会いから再開。名前と色を決めるまでは新しい記録を作らない。
+}
+function showDataConfirmation(type,data=null){
+ pendingDataAction={type,data};
+ $('dataConfirm').hidden=false;
+ $('dataConfirmTitle').textContent=type==='load'?'読み込みの確認':'初期化の確認';
+ $('dataConfirmMessage').textContent=type==='load'?
+  'ファイルの内容で、今の名前・色・性格・言葉・思い出・ゲーム記録・設定などをすべて置き換えます。現在の記録を残したい場合は、先に「すべて保存」してください。':
+  '名前・色・覚えた言葉・造語・思い出・性格・ゲーム記録・設定など、すべてのデータを消して最初の出会いからやり直します。この操作は元に戻せません。';
+ $('dataProceed').textContent=type==='load'?'読み込みを実行':'すべて初期化する';
+ $('dataProceed').focus({preventScroll:true});
+}
+function closeDataConfirmation(){pendingDataAction=null;$('dataConfirm').hidden=true;}
+$('saveAll').addEventListener('click',()=>{closeDataConfirmation();downloadAllData()});
+$('loadAll').addEventListener('click',()=>{closeDataConfirmation();$('loadAllFile').click()});
+$('loadAllFile').addEventListener('change',async e=>{
  const file=e.target.files?.[0];if(!file)return;
- try{if(file.size>20000)throw Error('too large');const data=JSON.parse(await file.text());
-  if(data.kind!=='moko-look'||data.version!==1)throw Error('format');const imported=normalizeLook(data.appearance);if(!imported)throw Error('invalid');
-  look={...imported,created:true};saveCurrentLook();syncPetIdentity();$('lookFeedback').textContent='みためを よみこんだよ';
- }catch{$('lookFeedback').textContent='この みためは よみこめないよ'}
+ try{
+  if(file.size>400000)throw Error('large');
+  const data=validateAllData(JSON.parse(await file.text()));
+  $('dataStatus').textContent='ファイルを確認しました。読み込みを実行すると、今のデータが置き換わります。';
+  showDataConfirmation('load',data);
+ }catch{$('dataStatus').textContent='このファイルは読み込めません。もこの「すべて保存」で作ったJSONファイルを選んでください。'}
  e.target.value='';
 });
-syncPetIdentity();
+$('resetAll').addEventListener('click',()=>{closeDataConfirmation();showDataConfirmation('reset')});
+$('dataCancel').addEventListener('click',()=>{$('dataStatus').textContent='変更を取り消しました。';closeDataConfirmation()});
+$('dataProceed').addEventListener('click',()=>{
+ if(!pendingDataAction)return;
+ const action=pendingDataAction;closeDataConfirmation();
+ if(action.type==='load')restoreAllData(action.data);
+ else resetAllData();
+});
+
 $('menuButton').addEventListener('click',()=>openSheet==='menu'?closePanel():openPanel('menu'));
 $('chatButton').addEventListener('click',()=>openSheet==='chat'?closePanel():openPanel('chat'));
+$('gamesButton').addEventListener('click',openGames);
 $('closeMenu').addEventListener('click',closePanel);$('closeChat').addEventListener('click',closePanel);$('scrim').addEventListener('click',closePanel);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('creator').hidden&&creatorEditing)closeCreator();else closePanel()}});
 $('pokeButton').addEventListener('click',poke);$('petButton').addEventListener('click',pet);$('snackButton').addEventListener('click',snack);
@@ -1416,10 +3309,47 @@ $('questionLater').addEventListener('click',()=>{clearQuestion(true);scheduleIdl
 $('questionChoices').addEventListener('click',e=>{const b=e.target.closest('[data-question-reply]');if(b)answerQuestion(b.dataset.questionReply)});
 document.querySelectorAll('[data-say]').forEach(b=>b.addEventListener('click',()=>talk(b.dataset.say)));
 $('idleToggle').addEventListener('click',()=>{st.idle=!st.idle;$('idleToggle').setAttribute('aria-checked',String(st.idle));store();scheduleIdle()});
+$('soloToggle').addEventListener('click',()=>{
+ st.solo=!st.solo;$('soloToggle').setAttribute('aria-checked',String(st.solo));
+ if(!st.solo)stopSoloPlay();store();scheduleIdle();
+});
+$('soloNow').addEventListener('click',()=>{
+ if(!st.solo){$('soloNow').textContent='おふ だよ';setTimeout(()=>$('soloNow').textContent='みてみる',1200);return}
+ if(asleep){$('soloNow').textContent='ねんね ちゅう';setTimeout(()=>$('soloNow').textContent='みてみる',1200);return}
+ if(pendingQuestion)clearQuestion();
+ closePanel();clearTimeout(autoTimer);startSoloPlay(st.idle);
+});
 $('learnToggle').addEventListener('click',()=>{cancelFollowUp();st.learn=!st.learn;$('learnToggle').setAttribute('aria-checked',String(st.learn));if(!st.learn)clearQuestion();store();$('teachFeedback').textContent=st.learn?'また ことばを きくね':'いまは おぼえないよ'});
 $('questionToggle').addEventListener('click',()=>{cancelFollowUp();st.questions=!st.questions;$('questionToggle').setAttribute('aria-checked',String(st.questions));if(!st.questions)clearQuestion();store()});
 $('followToggle').addEventListener('click',()=>{st.followUp=!st.followUp;cancelFollowUp();$('followToggle').setAttribute('aria-checked',String(st.followUp));store()});
 $('echoToggle').addEventListener('click',()=>{st.echo=!st.echo;if(!st.echo){echoes=[];saveEchoes()}$('echoToggle').setAttribute('aria-checked',String(st.echo));store();scheduleIdle()});
+$('keepsakeToggle').addEventListener('click',()=>{st.keepsakes=!st.keepsakes;$('keepsakeToggle').setAttribute('aria-checked',String(st.keepsakes));store();scheduleIdle()});
+
+$('coinToggle').addEventListener('click',()=>{
+ st.coinages=!st.coinages;$('coinToggle').setAttribute('aria-checked',String(st.coinages));
+ $('coinageFeedback').textContent=st.coinages?'また ことばを つくるね':'いまは つくらないよ';
+ store();scheduleIdle();
+});
+$('coinNow').addEventListener('click',()=>{
+ if(!st.coinages){$('coinageFeedback').textContent='じぶんの ことばが オフです。';$('coinNow').textContent='おふ だよ';setTimeout(()=>$('coinNow').textContent='いってみる',1200);return}
+ if(asleep){$('coinageFeedback').textContent='ねんね中は、新しい言葉を作りません。';return}
+ if(pendingQuestion)clearQuestion();
+ stopSoloPlay();const full=coinages.length>=COIN_LIMIT;
+ const said=newOrKnownCoinage(true);if(!said)return;
+ $('coinageFeedback').textContent=full?'ぽっけが いっぱい！ おきにいりを いったよ。':'あたらしい ことばが うまれたよ。';
+ closePanel();speakWords(said.w,said.e);animate('wiggle');scheduleIdle();
+});
+$('coinageList').addEventListener('click',event=>{
+ const btn=event.target.closest('[data-forget-coinage]');if(!btn)return;
+ coinages=coinages.filter(c=>c.word!==btn.dataset.forgetCoinage);forgetKeepsake('coinage',btn.dataset.forgetCoinage);storeCoinages();renderCoinages();
+ $('coinageFeedback').textContent='また ひらめくかも。';
+});
+$('coinageBook').addEventListener('toggle',()=>{
+ if($('coinageBook').open&&openSheet==='menu')setTimeout(()=>{
+  if(openSheet==='menu')$('menuSheet').scrollTo({top:Math.max(0,$('coinageBook').offsetTop-26),behavior:'smooth'});
+ },100);
+});
+
 $('askNow').addEventListener('click',()=>{
  cancelFollowUp();if(!st.questions||!st.learn){$('askNow').textContent='おふ だよ';setTimeout(()=>$('askNow').textContent='きいてみて',1200);return}
  closePanel();if(pendingQuestion)clearQuestion();startQuestion();scheduleIdle();
@@ -1441,47 +3371,16 @@ $('connectForm').addEventListener('submit',e=>{
  const item=memories.find(m=>m.word===toHira(from).trim());
  if(item&&result.includes('つながった')){rememberEcho(item.word,toHira(to).trim(),'relation');react([item.word,toHira(to).trim(),'ふふ'],'happy','wiggle',true);$('connectTo').value=''}
 });
-// content:// などで自動保存が制限される環境でも単語だけを持ち運べるようにする。
-$('saveWords').addEventListener('click',()=>{
- if(!memories.length){$('wordbookTip').textContent='まだ ことばが ないよ';return}
- const payload={kind:'moko-words',version:3,words:memories.map(m=>({word:m.word,hears:m.hears,seen:m.seen,affinity:m.affinity,days:m.days,links:m.links,noLinks:m.noLinks,askedLinks:m.askedLinks,idleDay:m.idleDay}))};
- const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
- const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='moko_kotoba.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
- $('wordbookTip').textContent='ことばの ほぞんを つくったよ';
-});
-$('loadWords').addEventListener('click',()=>$('loadWordsFile').click());
-$('loadWordsFile').addEventListener('change',async e=>{
- const file=e.target.files?.[0];if(!file)return;
- try{
-  if(file.size>120000)throw Error('large');
-  const parsed=JSON.parse(await file.text());
-  if(parsed?.kind!=='moko-words'||![1,2,3].includes(parsed.version)||!Array.isArray(parsed.words))throw Error('format');
-  let merged=0;
-  for(const entry of parsed.words.slice(0,MAX_WORDS)){
-   const item=normalizeMemory(entry);if(!item)continue;
-   const old=memories.find(m=>m.word===item.word);
-   if(old){old.hears=Math.max(old.hears,item.hears);old.affinity=Math.max(old.affinity,item.affinity);old.seen=Math.max(old.seen,item.seen);old.days=[...new Set([...old.days,...item.days])].slice(-14);old.links=sanitizeLinks([...old.links,...item.links],old.word);old.noLinks=sanitizeLinks([...old.noLinks,...item.noLinks],old.word).filter(x=>!old.links.includes(x));old.askedLinks=sanitizeLinks([...old.askedLinks,...item.askedLinks],old.word);old.idleDay=old.idleDay||item.idleDay}
-   else if(memories.length<MAX_WORDS){memories.push(item);merged++}
-  }
-  storeWords();renderWordbook();$('wordbookTip').textContent='よみこんだよ ('+merged+'こ ふえた)';
- }catch{$('wordbookTip').textContent='この きろくは よみこめないよ'}
- e.target.value='';
-});
 $('wordbook').addEventListener('toggle',()=>{
  if($('wordbook').open&&openSheet==='menu')setTimeout(()=>{if(openSheet==='menu'){const box=$('menuSheet');box.scrollTo({top:Math.max(0,$('wordbook').offsetTop-26),behavior:'smooth'})}},100);
 });
 $('wordList').addEventListener('click',e=>{
  const btn=e.target.closest('[data-forget]');if(!btn)return;
- memories=memories.filter(m=>m.word!==btn.dataset.forget);echoes=echoes.filter(x=>x.subject!==btn.dataset.forget&&x.detail!==btn.dataset.forget);saveEchoes();if(pendingQuestion?.word===btn.dataset.forget)clearQuestion();forgetArmed=false;$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';storeWords();renderWordbook();
-});
-let forgetArmed=false,forgetTimer=0;
-$('forgetAll').addEventListener('click',()=>{
- if(!forgetArmed){forgetArmed=true;$('forgetAll').textContent='ほんとうに？';$('wordbookTip').textContent='もういちど おすと ぜんぶ わすれるよ';clearTimeout(forgetTimer);forgetTimer=setTimeout(()=>{forgetArmed=false;$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='おはなしから おぼえるよ'},5500);return}
- const learnedWords=new Set(memories.map(x=>x.word));memories=[];echoes=echoes.filter(x=>!learnedWords.has(x.subject)&&!learnedWords.has(x.detail));saveEchoes();if(pendingQuestion)clearQuestion();forgetArmed=false;clearTimeout(forgetTimer);storeWords();renderWordbook();$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';
+ memories=memories.filter(m=>m.word!==btn.dataset.forget);echoes=echoes.filter(x=>x.subject!==btn.dataset.forget&&x.detail!==btn.dataset.forget);saveEchoes();if(pendingQuestion?.word===btn.dataset.forget)clearQuestion();$('wordbookTip').textContent='また おしえてね';storeWords();renderWordbook();
 });
 $('paceSelect').addEventListener('change',e=>{st.pace=e.target.value;store();scheduleIdle()});
-$('sleepButton').addEventListener('click',()=>{cancelFollowUp();if(pendingQuestion)clearQuestion();asleep=true;$('robotWrap').classList.add('sleep');closePanel();speakWords(['おやすみ','すぅ…','ねむねむ'],'sleepy');updateMood();scheduleIdle(true)});
-$('idleToggle').setAttribute('aria-checked',String(st.idle));$('learnToggle').setAttribute('aria-checked',String(st.learn));$('questionToggle').setAttribute('aria-checked',String(st.questions));$('followToggle').setAttribute('aria-checked',String(st.followUp));$('echoToggle').setAttribute('aria-checked',String(st.echo));$('storageWarning').hidden=wordStorageOK;renderWordbook();
+$('sleepButton').addEventListener('click',()=>{stopSoloPlay();cancelFollowUp();if(pendingQuestion)clearQuestion();asleep=true;$('robotWrap').classList.add('sleep');closePanel();speakWords(['おやすみ','すぅ…','ねむねむ'],'sleepy');updateMood();scheduleIdle(true)});
+$('idleToggle').setAttribute('aria-checked',String(st.idle));$('soloToggle').setAttribute('aria-checked',String(st.solo));$('learnToggle').setAttribute('aria-checked',String(st.learn));$('questionToggle').setAttribute('aria-checked',String(st.questions));$('followToggle').setAttribute('aria-checked',String(st.followUp));$('echoToggle').setAttribute('aria-checked',String(st.echo));$('coinToggle').setAttribute('aria-checked',String(st.coinages));$('storageWarning').hidden=wordStorageOK;renderWordbook();renderCoinages();
 if(!['slow','normal','often'].includes(st.pace))st.pace='normal';$('paceSelect').value=st.pace;
 // とんとん と なでなでを すまほの ゆびで できるように する
 const robot=$('robotWrap');
@@ -1508,11 +3407,11 @@ function scheduleBlink(){clearTimeout(blinkTimer);blinkTimer=setTimeout(()=>{
  scheduleBlink()
 },2400+random(4800))}
 document.addEventListener('visibilitychange',()=>{
- if(document.hidden){cancelFollowUp();clearTimeout(autoTimer);store()}
+ if(document.hidden){stopSoloPlay();cancelFollowUp();clearTimeout(autoTimer);store()}
  else{if(pendingQuestion&&Date.now()>=questionExpiry)clearQuestion();scheduleIdle(true);scheduleBlink()}
 });
 window.addEventListener('pagehide',store);
-renderInitialDictionary();store();updateMood();scheduleBlink();scheduleIdle(true);if(!look.created)openCreator(false);
+renderInitialDictionary();renderKeepsakes();updateGameRecords();store();updateMood();updateTemperament();scheduleBlink();scheduleIdle(true);if(!look.created)openCreator(false);
 })();
 </script>
 </body>
