@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.28</title>
+<title>もこぼっと v1.5.29</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -2402,10 +2402,12 @@ const RUN_DIFFICULTY={
  normal:{speed:1,spawnMin:1.45,spawnRange:.8,shoot:1,bullet:1,shooterChance:1,item:1},
  hard:{speed:1.13,spawnMin:1.15,spawnRange:.58,shoot:.72,bullet:1.18,shooterChance:1,item:1.12}
 };
+// v1.5.29: もこと敵の移動テンポをどちらも約7〜8%緩やかにする。
+// 追跡率・敵数・残機・アイテム効果は従来のまま。
 const MAZE_DIFFICULTY={
- easy:{lives:5,enemies:1,heroStep:.13,enemyStep:.78,chase:.43,powerSeconds:9},
- normal:{lives:3,enemies:2,heroStep:.14,enemyStep:.51,chase:.72,powerSeconds:7},
- hard:{lives:2,enemies:3,heroStep:.14,enemyStep:.39,chase:.90,powerSeconds:5.5}
+ easy:{lives:5,enemies:1,heroStep:.14,enemyStep:.84,chase:.43,powerSeconds:9},
+ normal:{lives:3,enemies:2,heroStep:.15,enemyStep:.55,chase:.72,powerSeconds:7},
+ hard:{lives:2,enemies:3,heroStep:.15,enemyStep:.42,chase:.90,powerSeconds:5.5}
 };
 let gameSprite=null;
 function bestKey(kind,difficulty){return kind+'Best'+DIFFICULTY_SUFFIX[difficulty]}
@@ -3374,7 +3376,7 @@ let pendingDataAction=null;
 function allDataSnapshot(){
  tidyEchoes();
  return {
-  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.26',savedAt:new Date().toISOString(),
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.29',savedAt:new Date().toISOString(),
   state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
   appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
   coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
