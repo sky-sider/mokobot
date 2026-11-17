@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.26</title>
+<title>もこぼっと v1.5.27</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -2990,6 +2990,14 @@ function mazeAddRooms(grid,count){
   for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++)grid[y][x]=0;
  }
 }
+// v1.5.27: 開始地点が一本道の袋小路にならないよう、必ず2本の脱出路をつくる。
+// 既存の奇数座標の通路に確実につながるため、迷路全体の接続は維持される。
+function mazeOpenStartRoutes(grid){
+ for(const [x,y] of [[1,1],[2,1],[1,2],[2,2],[3,1],[1,3],[4,1],[1,4]])grid[y][x]=0;
+}
+const MAZE_HOME_SAFE_RADIUS=3;
+function mazeHomeDistance(x,y){return Math.abs(x-1)+Math.abs(y-1)}
+function mazeHomeSafe(x,y){return mazeHomeDistance(x,y)<=MAZE_HOME_SAFE_RADIUS}
 function mazeReachableCount(grid){
  if(grid[1][1]!==0)return 0;
  const seen=new Set([mazeKey(1,1)]),queue=[[1,1]];
@@ -3026,10 +3034,11 @@ function makeMaze(forceType=null){
     mazeAddRooms(grid,3+random(2));mazeAddConnections(grid,7+random(6));
    }
   }
+  mazeOpenStartRoutes(grid);
   if(mazeGridValid(grid)){lastMazeType=type.id;return {grid,type}}
  }
  // 念のためのフォールバック。孤立したぽよだまを生成しない。
- const grid=mazeEmptyGrid();mazeCarveDepth(grid);
+ const grid=mazeEmptyGrid();mazeCarveDepth(grid);mazeOpenStartRoutes(grid);
  lastMazeType='twisty';return {grid,type:MAZE_TYPES[0]};
 }
 function mazeWalkable(grid,x,y){return x>=0&&y>=0&&x<MAZE_W&&y<MAZE_H&&grid[y][x]===0}
@@ -3079,14 +3088,18 @@ function startMaze(begin=true){
  for(let i=0;i<Math.min(3,far.length);i++){const j=random(far.length);power.add(far.splice(j,1)[0])}
  mazeState={difficulty,grid,mazeType:type.id,mazeTypeName:type.name,pellets,power,hero:{x:1,y:1},
   enemies:enemyStarts.map(([x,y])=>({x,y,sx:x,sy:y})),
-  desired:'right',direction:'right',lives:tuning.lives,score:0,shield:0,invincible:0,stepClock:0,enemyClock:0,last:0,active:begin,ended:false};
+  desired:null,direction:null,lives:tuning.lives,score:0,shield:0,invincible:begin?2.5:0,stepClock:0,enemyClock:0,last:0,active:begin,ended:false};
  $('mazeType').textContent=type.name;
  $('mazeStart').textContent=begin?'はじめから':'はじめる';
  $('mazeBest').textContent=currentBest('maze',difficulty);
- $('mazeStatus').textContent=begin?type.name+'！ ぽよだまを あつめよう！':'はじめると もこが うごくよ';
+ $('mazeStatus').textContent=begin?'やじるしで うごこう！ はじめの ばしょは あんぜんだよ':'はじめると めいろが うごくよ';
  updateMazeHUD();drawMaze();if(begin)gameFrame(performance.now());
 }
-function setMazeDirection(dir){if(gameMode==='maze'&&mazeState?.active&&MAZE_DIRECTIONS[dir])mazeState.desired=dir}
+function setMazeDirection(dir){
+ if(gameMode!=='maze'||!mazeState?.active||!MAZE_DIRECTIONS[dir])return;
+ mazeState.desired=dir;
+ if(!mazeState.direction)mazeState.direction=dir;
+}
 function updateMazeHUD(){
  if(!mazeState)return;const m=mazeState;
  $('mazeRemain').textContent=m.pellets.size;$('mazeLives').textContent=m.lives;
@@ -3115,8 +3128,11 @@ function collectMazePellet(){
 }
 function stepMazeHero(){
  const m=mazeState;if(!m?.active)return;
- const wants=MAZE_DIRECTIONS[m.desired],move=MAZE_DIRECTIONS[m.direction];
+ // 開始時と復活時は勝手に動かず、プレイヤーが方向を選ぶまで待つ。
+ if(!m.direction&&!m.desired)return;
+ const wants=MAZE_DIRECTIONS[m.desired];
  if(wants&&mazeWalkable(m.grid,m.hero.x+wants[0],m.hero.y+wants[1]))m.direction=m.desired;
+ if(!m.direction)return;
  const [dx,dy]=MAZE_DIRECTIONS[m.direction];
  if(mazeWalkable(m.grid,m.hero.x+dx,m.hero.y+dy)){m.hero.x+=dx;m.hero.y+=dy;collectMazePellet()}
  checkMazeCollision();
@@ -3124,12 +3140,26 @@ function stepMazeHero(){
 function stepMazeEnemies(){
  const m=mazeState;if(!m?.active)return;
  for(const enemy of m.enemies){
+  // 以前は全員が同じ最短経路を選び、開始地点に重なって押し寄せていた。
+  // 入口の安全圏・敵同士の重なり・複数体での包囲を避けて移動先を選ぶ。
+  const nearOthers=m.enemies.some(other=>other!==enemy&&mazeDistance(m.grid,other.x,other.y,m.hero.x,m.hero.y)<=2);
   const options=[];
-  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS))if(mazeWalkable(m.grid,enemy.x+dx,enemy.y+dy))options.push([enemy.x+dx,enemy.y+dy]);
-  if(options.length){
-   options.sort((a,b)=>mazeDistance(m.grid,a[0],a[1],m.hero.x,m.hero.y)-mazeDistance(m.grid,b[0],b[1],m.hero.x,m.hero.y));
-   const chooseChase=Math.random()<MAZE_DIFFICULTY[m.difficulty].chase;const dest=chooseChase?options[0]:options[random(options.length)];enemy.x=dest[0];enemy.y=dest[1];
+  for(const [dx,dy] of Object.values(MAZE_DIRECTIONS)){
+   const nx=enemy.x+dx,ny=enemy.y+dy;
+   if(!mazeWalkable(m.grid,nx,ny)||mazeHomeSafe(nx,ny))continue;
+   if(m.enemies.some(other=>other!==enemy&&other.x===nx&&other.y===ny))continue;
+   const toHero=mazeDistance(m.grid,nx,ny,m.hero.x,m.hero.y);
+   if(nearOthers&&toHero<=2)continue;
+   options.push({x:nx,y:ny,toHero,home:mazeHomeDistance(nx,ny),tie:Math.random()});
   }
+  if(!options.length)continue;
+  // もこが入口に戻ったときは、入口で待ち伏せせず奥へ戻る。
+  const retreat=mazeHomeSafe(m.hero.x,m.hero.y)&&mazeHomeDistance(enemy.x,enemy.y)<=6;
+  const chase=!retreat&&Math.random()<MAZE_DIFFICULTY[m.difficulty].chase;
+  if(retreat)options.sort((a,b)=>b.home-a.home||a.tie-b.tie);
+  else if(chase)options.sort((a,b)=>a.toHero-b.toHero||a.tie-b.tie);
+  const dest=retreat||chase?options[0]:options[random(options.length)];
+  enemy.x=dest.x;enemy.y=dest.y;
  }
  checkMazeCollision();
 }
@@ -3139,10 +3169,14 @@ function checkMazeCollision(){
   if(e.x!==m.hero.x||e.y!==m.hero.y)continue;
   if(m.shield>0){m.score+=70;e.x=e.sx;e.y=e.sy;$('mazeStatus').textContent=look.name+'「やったぁ！ ぽよ！」';continue}
   if(m.invincible>0)return;
-  m.lives--;m.invincible=2.5;
+  m.lives--;
   if(m.lives<=0){endMaze(false);return}
-  $('mazeStatus').textContent='おっと！ あと '+m.lives+'かい！';
-  m.hero={x:1,y:1};m.direction='right';m.desired='right';m.enemies.forEach(en=>{en.x=en.sx;en.y=en.sy});
+  // 残機がある場合は安全地帯へ戻り、4秒の猶予を設けて操作を待つ。
+  m.invincible=4;
+  m.hero={x:1,y:1};m.direction=null;m.desired=null;
+  m.stepClock=0;m.enemyClock=0;
+  m.enemies.forEach(en=>{en.x=en.sx;en.y=en.sy});
+  $('mazeStatus').textContent='おっと！ あと '+m.lives+'かい！ やじるしで うごこう';
   return;
  }
 }
@@ -3163,7 +3197,8 @@ function drawMaze(){
   const xx=x*MAZE_TILE,yy=y*MAZE_TILE,k=mazeKey(x,y);
   if(m.grid[y][x]===1){ctx.fillStyle='#a8c8bd';ctx.beginPath();ctx.roundRect(xx+1,yy+1,28,28,6);ctx.fill();}
   else{
-   ctx.fillStyle='#fcfff9';ctx.fillRect(xx,yy,30,30);
+   // 出発地点の淡い色は、敵が近づかない安全エリアの目印。
+   ctx.fillStyle=mazeHomeSafe(x,y)?'#eaf6ea':'#fcfff9';ctx.fillRect(xx,yy,30,30);
    if(m.pellets.has(k)){
     ctx.fillStyle=m.power.has(k)?'#f1bd55':'#97c0ad';ctx.beginPath();ctx.arc(xx+15,yy+15,m.power.has(k)?7:3.2,0,Math.PI*2);ctx.fill();
    }
@@ -3190,9 +3225,10 @@ function beginOrRestartMaze(){
  // 選択画面に表示された迷路を、そのまま遊び始める。
  if(m&&!m.active&&!m.ended){
   m.active=true;m.last=0;m.stepClock=0;m.enemyClock=0;
+  m.direction=null;m.desired=null;m.invincible=2.5;
   lockDifficulty('maze',true);
   $('mazeStart').textContent='はじめから';
-  $('mazeStatus').textContent=m.mazeTypeName+'！ ぽよだまを あつめよう！';
+  $('mazeStatus').textContent='やじるしで うごこう！ はじめの ばしょは あんぜんだよ';
   gameFrame(performance.now());return;
  }
  // クリア後は次の迷路、プレイ中は新しい迷路で再挑戦。
