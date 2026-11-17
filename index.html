@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.21</title>
+<title>もこぼっと v1.5.23</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -316,6 +316,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .game-btn.alt{background:#edf4ee;color:#558477;box-shadow:none}
 .game-btn:disabled{opacity:.5;cursor:default}
 .game-select{background:#fff;border:1px solid #dbe7e0;color:#567b6d;padding:9px 13px;border-radius:12px;font-size:16px;min-height:44px}
+.game-play-card{background:#fff;border-radius:24px;padding:15px;box-shadow:0 5px 17px rgba(47,77,69,.07);display:flex;flex-direction:column;gap:12px}
+.game-play-card .game-status{margin:0}
+.game-play-card .maze-board-wrap{background:#f7fbf8;border-radius:20px;padding:10px}
+.game-play-card .maze-canvas{background:#ebf3e9}
 .faceoff-card{background:#fff;border-radius:24px;padding:14px 14px 16px;box-shadow:0 5px 17px rgba(47,77,69,.07)}
 .faceoff-top{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:12px}
 .faceoff-mascot{width:118px;height:120px;display:grid;place-items:center}
@@ -403,6 +407,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  .game-actions{gap:6px}
  .game-actions .game-btn{min-height:40px;padding:7px 12px}
  .game-control .game-btn{min-width:0;flex:1;white-space:nowrap;font-size:12px;padding:8px}
+ .game-play-card{padding:10px;gap:8px}
  .runner-controls{gap:8px}
  .runner-controls #runnerJump,.runner-controls #runnerStart{min-height:62px;font-size:13px;padding:9px 10px;border-radius:16px}
  .runner-controls #runnerJump{flex:1.45}
@@ -459,6 +464,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   flex:none;gap:4px 7px;padding:9px 10px;font-size:clamp(10px,2.8vw,12px);
 }
 .game-screen.maze-mode #gameMaze .game-stats b{font-size:clamp(13px,3.3vw,16px)}
+.game-screen.maze-mode #gameMaze .game-play-card{
+  flex:1 1 0;min-height:0;display:flex;flex-direction:column;
+  gap:clamp(4px,1vh,9px);padding:10px;
+}
 .game-screen.maze-mode #gameMaze .maze-board-wrap{
   flex:1 1 0;min-height:0;min-width:0;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
@@ -714,7 +723,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <!-- v1.5 もこの あそびば：ゲーム中はホームを隠さず上に表示 -->
   <section id="gameScreen" class="game-screen" role="dialog" aria-modal="true" aria-labelledby="gameHeading" hidden>
     <header class="game-header">
-      <button id="gameBack" class="game-back" type="button">もどる</button>
+      <button id="gameBack" class="game-back" type="button">← あそびば</button>
       <div class="game-heading" id="gameHeading">もこの あそびば</div>
       <button id="gameClose" class="game-close" type="button" aria-label="げーむを とじる">×</button>
     </header>
@@ -757,21 +766,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div id="gameRunner" class="game-panel" hidden>
         <div class="difficulty-row"><p class="game-rule">タップで 2だんジャンプ！ てきを よけて、ふんで たおそう。</p><label class="game-difficulty">むずかしさ <select id="runnerDifficulty" aria-label="じゃんぷの むずかしさ"><option value="easy">かんたん</option><option value="normal" selected>ふつう</option><option value="hard">むずかしい</option></select></label></div>
         <div class="game-stats"><span>すすんだ <b id="runnerScore">0</b></span><span>✦ <b id="runnerStars">0</b></span><span>へんしん <b id="runnerPower">なし</b></span><span>さいこう <b id="runnerBest">0</b></span></div>
-        <canvas id="runnerCanvas" class="game-canvas runner-canvas" width="640" height="360" aria-label="もこもこ じゃんぷの ゲームがめん。タップでジャンプ"></canvas>
-        <div id="runnerStatus" class="game-status" aria-live="polite">はじめると もこが すすむよ</div>
-        <div class="game-control runner-controls"><button id="runnerJump" class="game-btn alt" type="button">ぽよん！ じゃんぷ</button><button id="runnerStart" class="game-btn" type="button">はじめる</button></div>
+        <div class="game-play-card">
+          <canvas id="runnerCanvas" class="game-canvas runner-canvas" width="640" height="360" aria-label="もこもこ じゃんぷの ゲームがめん。タップでジャンプ"></canvas>
+          <div id="runnerStatus" class="game-status" aria-live="polite">はじめると もこが すすむよ</div>
+          <div class="game-control runner-controls"><button id="runnerJump" class="game-btn alt" type="button">ぽよん！ じゃんぷ</button><button id="runnerStart" class="game-btn" type="button">はじめる</button></div>
+        </div>
         <div class="runner-legend"><span>📖 ほん：じどうで うつ</span><span>🚲 ばいく：はやい・むてき</span><span>🧊 れいぞうこ：おおきい・むてき</span><span>● てきの たま：むてきなら へいき</span></div>
       </div>
       <div id="gameMaze" class="game-panel" hidden>
         <div class="difficulty-row"><p class="game-rule"><strong id="mazeType" class="maze-type">くねくね</strong>　ぽよだまを あつめよう。</p><label class="game-difficulty">むずかしさ <select id="mazeDifficulty" aria-label="めいろの むずかしさ"><option value="easy">かんたん</option><option value="normal" selected>ふつう</option><option value="hard">むずかしい</option></select></label></div>
         <div class="game-stats"><span>のこり <b id="mazeRemain">0</b></span><span>♡ <b id="mazeLives">3</b></span><span>てんすう <b id="mazeScore">0</b></span><span>さいこう <b id="mazeBest">0</b></span></div>
-        <div class="maze-board-wrap"><canvas id="mazeCanvas" class="game-canvas maze-canvas" width="450" height="390" aria-label="もぐもぐめいろの ゲームばん。スワイプで移動"></canvas></div>
-        <div id="mazeStatus" class="game-status" aria-live="polite">ぽよだまを さがそう</div>
-        <div class="maze-controls">
-          <div class="game-dpad" aria-label="めいろの いどう">
-            <button type="button" class="up" data-dir="up" aria-label="うえ">↑</button><button type="button" class="left" data-dir="left" aria-label="ひだり">←</button><span class="center" aria-hidden="true">●</span><button type="button" class="right" data-dir="right" aria-label="みぎ">→</button><button type="button" class="down" data-dir="down" aria-label="した">↓</button>
+        <div class="game-play-card maze-play-card">
+          <div class="maze-board-wrap"><canvas id="mazeCanvas" class="game-canvas maze-canvas" width="450" height="390" aria-label="もぐもぐめいろの ゲームばん。スワイプで移動"></canvas></div>
+          <div id="mazeStatus" class="game-status" aria-live="polite">ぽよだまを さがそう</div>
+          <div class="maze-controls">
+            <div class="game-dpad" aria-label="めいろの いどう">
+              <button type="button" class="up" data-dir="up" aria-label="うえ">↑</button><button type="button" class="left" data-dir="left" aria-label="ひだり">←</button><span class="center" aria-hidden="true">●</span><button type="button" class="right" data-dir="right" aria-label="みぎ">→</button><button type="button" class="down" data-dir="down" aria-label="した">↓</button>
+            </div>
+            <div class="game-actions"><button id="mazeStart" type="button" class="game-btn">はじめる</button></div>
           </div>
-          <div class="game-actions"><button id="mazeStart" type="button" class="game-btn">はじめる</button></div>
         </div>
       </div>
     </div>
@@ -2429,7 +2442,7 @@ function selectGame(mode){
  $('gameScreen').classList.toggle('maze-mode',mode==='maze');
  $('gameHub').hidden=true;
  for(const k of Object.keys(gameDetails))$('game'+k[0].toUpperCase()+k.slice(1)).hidden=(k!==mode);
- $('gameHeading').textContent=mode==='rps'?look.name+'と じゃんけん':mode==='simon'?look.name+'の まねっこ':gameDetails[mode][1];$('gameBack').textContent='あそびば';
+ $('gameHeading').textContent=mode==='rps'?look.name+'と じゃんけん':mode==='simon'?look.name+'の まねっこ':gameDetails[mode][1];$('gameBack').textContent='← あそびば';
  $('gameContent').scrollTop=0;syncDifficultyControls();updateGameRecords();updateGameSprite();
  if(mode==='rps'){gameAvatar('rpsMascot');startRps()}
  else if(mode==='simon'){gameAvatar('simonMascot');prepSimon()}
