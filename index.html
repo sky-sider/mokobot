@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこ v0.8.0 — ちいさな おしゃべりろぼっと</title>
+<title>もこ v0.9.0 — ちいさな おしゃべりろぼっと</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -284,6 +284,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="setting"><div>ことばを おぼえる<small>もともとの300語とは別に、会話で聞いた言葉を少しずつ覚えます。</small></div><button class="toggle" id="learnToggle" role="switch" aria-checked="true" aria-label="ことばを おぼえる"></button></div>
     <div class="setting"><div><span id="questionSettingLabel">もこからの しつもん</span><small>時々、自分から質問します。答えなくても大丈夫です。</small></div><button class="toggle" id="questionToggle" role="switch" aria-checked="true" aria-label="もこからの しつもん"></button></div>
     <div class="setting"><div>おはなしの つづき<small>返事を聞いたあと、追加で一度だけ質問します。途中で終えることもできます。</small></div><button class="toggle" id="followToggle" role="switch" aria-checked="true" aria-label="おはなしの つづき"></button></div>
+    <div class="setting"><div>おはなしの よいん<small>さっき話した言葉を、少し時間がたってから思い出してつぶやきます。会話の全文は保存しません。</small></div><button class="toggle" id="echoToggle" role="switch" aria-checked="true" aria-label="おはなしの よいん"></button></div>
     <div class="setting ask-setting"><div>いま きいてみる<small>その場で質問を一つ考えます。</small></div><button class="small-btn" id="askNow" type="button">きいてみて</button></div>
     <div class="setting"><div>ねんね<small>眠っている間も、時々寝言をつぶやきます。触れると起きます。</small></div><button class="small-btn" id="sleepButton">おやすみ</button></div>
     <details class="initial-dictionary" id="initialDictionary"><summary>はじめから しっている ことば <span class="wordbook-count" id="initialWordCount">300語</span></summary>
@@ -298,7 +299,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div class="wordbook-backup"><button class="small-btn" id="saveWords" type="button">ことばを ほぞん</button><button class="small-btn" id="loadWords" type="button">ことばを よみこむ</button><input type="file" id="loadWordsFile" accept=".json,application/json" class="visually-hidden" aria-label="ことばの ほぞんを よみこむ"></div>
     </details>
     <p class="menu-note" id="storageWarning" hidden>この開き方では自動保存を利用できないようです。「ことばの ぽっけ」の「ことばを ほぞん」から記録を保存してください。</p>
-    <p class="menu-note">覚えた言葉とそのつながりは、この端末に保存されます。会話の全文は保存しません。もこが言葉の意味をすべて理解しているわけではありません。</p>
+    <p class="menu-note">覚えた言葉とつながりに加え、余韻用の短い言葉を一時保存します。余韻は一度つぶやくか、時間がたつと消えます。会話の全文は保存しません。</p>
   </section>
   <section class="sheet" id="chatSheet" role="dialog" aria-modal="true" aria-labelledby="chatTitle" aria-hidden="true">
     <div class="sheet-head"><h2 id="chatTitle">もこと おはなし</h2><button class="close" id="closeChat" aria-label="とじる">×</button></div>
@@ -350,7 +351,7 @@ const KEY='moko_toy_v1';
 const WORD_KEY='moko_words_v1';
 let wordStorageOK=false;
 try{localStorage.setItem('moko_storage_check','ok');wordStorageOK=localStorage.getItem('moko_storage_check')==='ok';localStorage.removeItem('moko_storage_check')}catch{}
-const defaults={warmth:48,energy:77,curiosity:65,pokes:0,pets:0,visits:0,idle:true,pace:'normal',learn:true,questions:true,followUp:true,lastSeen:0};
+const defaults={warmth:48,energy:77,curiosity:65,pokes:0,pets:0,visits:0,idle:true,pace:'normal',learn:true,questions:true,followUp:true,echo:true,lastSeen:0};
 let saved={};
 try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch{}
 const st={...defaults,...saved};
@@ -1034,6 +1035,69 @@ function extractShortReply(text,subject='',kind=''){
  cleaned=cleaned.replace(/^(?:そこ|ここ)は/,'').replace(/(?:にいるよ|にいる|にあるよ|にある|だよ|だね|です|にいるの)$/,'');
  return validLink(cleaned)?cleaned:'';
 }
+// v0.9.0: さっきのおはなしの「よいん」。直近の短い言葉だけを保存し、時間がたったら一度だけ思い出す。
+// 会話本文・名前・自由入力の全文は保存しない。否定された言葉のつながりも記憶しない。
+const ECHO_KEY='moko_echo_v1';
+const ECHO_LIMIT=4, ECHO_LIFE=12*60*1000;
+let echoes=[];
+function echoWord(w){return typeof w==='string'&&/^[ぁ-ゖー]{2,7}$/.test(w)}
+function echoValid(x,now=Date.now()){
+ return x&&typeof x==='object'&&echoWord(x.subject)&&(!x.detail||echoWord(x.detail))&&
+  ['where','relation','mention'].includes(x.kind)&&Number.isFinite(x.created)&&
+  Number.isFinite(x.due)&&Number.isFinite(x.expires)&&x.created<=now+1000&&
+  x.due>=x.created&&x.expires>x.due&&x.expires<=x.created+ECHO_LIFE&&
+  x.expires>now;
+}
+function saveEchoes(){
+ try{if(echoes.length)localStorage.setItem(ECHO_KEY,JSON.stringify(echoes));else localStorage.removeItem(ECHO_KEY)}catch{}
+}
+function tidyEchoes(){const n=Date.now();echoes=echoes.filter(e=>echoValid(e,n)&&!(memories.find(m=>m.word===e.subject)?.noLinks||[]).includes(e.detail)).slice(-ECHO_LIMIT)}
+try{
+ const rows=JSON.parse(localStorage.getItem(ECHO_KEY)||'[]');
+ if(Array.isArray(rows))echoes=rows.filter(e=>echoValid(e)).slice(-ECHO_LIMIT);
+}catch{}
+// 会話で扱った言葉の中から、短い二語だけを一時的に預かる。
+function rememberEcho(subject,detail='',kind='mention'){
+ if(!st.echo)return false;
+ subject=toHira(subject).trim();detail=toHira(detail).trim();
+ if(!echoWord(subject)||!['where','relation','mention'].includes(kind))return false;
+ if(!echoWord(detail)||detail===subject)detail='';
+ if(detail){const m=memories.find(x=>x.word===subject);if(m&&(m.noLinks||[]).includes(detail))detail=''}
+ const stamp=Date.now();tidyEchoes();
+ // 同じ言葉を繰り返し聞いた場合は上書きし、同じ思い出が何度も発生しないようにする。
+ echoes=echoes.filter(x=>x.subject!==subject);
+ echoes.push({subject,detail,kind,created:stamp,due:stamp+85000+Math.floor(Math.random()*80000),expires:stamp+ECHO_LIFE});
+ echoes=echoes.slice(-ECHO_LIMIT);saveEchoes();return true;
+}
+function echoFromChat(message){
+ if(!st.echo)return;
+ const txt=toHira(message).trim();
+ // 「嫌い」「ちがう」などは、反対の意味として覚えてしまわないよう除外。
+ if(/きらい|すきじゃない|すきではない|ちがう|じゃない|ではない|わからない/.test(txt))return;
+ const hits=[...INITIAL_WORDS.map(x=>x.word),...memories.map(x=>x.word)]
+  .filter((word,i,a)=>word.length>=2&&a.indexOf(word)===i&&containsSpokenWord(txt,word))
+  .map(word=>({word,at:txt.indexOf(word)}))
+  .sort((a,b)=>a.at-b.at||b.word.length-a.word.length);
+ if(!hits.length)return;
+ const subject=hits[0].word;
+ const rest=hits.find(x=>x.word!==subject&&x.at>=hits[0].at+subject.length);
+ let detail=rest?.word||'';
+ // 文脈上の関係がない複数単語を無理につなげない。
+ if(detail&&!/(?:は|が|と|の|に|で|を|すき|おいしい|いる|ある)/.test(txt.slice(hits[0].at+subject.length,rest.at+detail.length)))detail='';
+ const where=!!detail&&/(?:にいる|にある|のなか|のした|のうえ|いるよ|あるよ)/.test(txt);
+ rememberEcho(subject,detail,where?'where':detail?'relation':'mention');
+}
+function popDueEcho(){
+ if(!st.echo||!st.idle||asleep||pendingQuestion||openSheet||document.hidden)return null;
+ tidyEchoes();const i=echoes.findIndex(x=>x.due<=Date.now());
+ if(i<0)return null;
+ const x=echoes.splice(i,1)[0];saveEchoes();
+ let w;
+ if(x.kind==='where'&&x.detail)w=[x.detail+'…',x.subject,'いたね'];
+ else if(x.detail)w=[x.subject,x.detail,choose(['ふふ','だね','おもいだした'])];
+ else w=[choose(['あのね','さっき']),x.subject,choose(['ふふ','おぼえてる','すき'])];
+ return {w,e:'happy',topic:'talk'};
+}
 function answerQuestion(reply){
  if(!pendingQuestion)return false;
  const q=pendingQuestion,normalized=toHira(reply).trim().replace(/[!！?？。\s、,.]/g,'');
@@ -1052,23 +1116,25 @@ function answerQuestion(reply){
   if(unsure){w=['そっか','また','きくね']}
   else if(neg){
    if(item){item.links=item.links.filter(x=>x!==q.link);item.noLinks=[...(item.noLinks||[]).filter(x=>x!==q.link),q.link].slice(-3);storeWords();renderWordbook()}
+   echoes=echoes.filter(x=>!(x.subject===q.word&&x.detail===q.link));saveEchoes();
    w=['ちがう？',q.word,'そうなんだ'];e='puzzled';
   }else if(yes){
    if(item)connectWords(q.word,q.link);
+   rememberEcho(q.word,q.link,'relation');
    w=[q.word,q.link,'そうなんだ！'];e='happy';anim='lovely';
    follow=secondQuestion(q,'',true);
   }else{w=['ん？','もういっかい','おしえて'];e='puzzled'}
  }else if(q.type==='where'){
   const word=extractShortReply(reply,q.word,'where'),item=memories.find(m=>m.word===q.word);
   if(unsure||NEGATIVE.test(normalized)){w=['そっか','どこかな','ぽや']}
-  else if(word&&item){connectWords(q.word,word);w=[q.word,word,'いた！'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
+  else if(word&&item){connectWords(q.word,word);rememberEcho(q.word,word,'where');w=[q.word,word,'いた！'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
   else{w=['ん？','どこかな','ふしぎ'];e='puzzled'}
  }else{
   const word=extractShortReply(reply,'','favorite');
   if(unsure||NEGATIVE.test(normalized))w=['うん','ゆっくり','でいいよ'];
   else if(word&&validWord(word)){
    const result=rememberWord(word);
-   if(result.item){likeWord(result.item);w=[word,'すき？','おぼえる'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
+   if(result.item){likeWord(result.item);rememberEcho(word,'','mention');w=[word,'すき？','おぼえる'];e='happy';anim='lovely';follow=secondQuestion(q,word,true)}
    else w=['あのね','きいたよ','ふふ'];
   }else w=['ん？','まねっこ','むにゃ'];
  }
@@ -1182,6 +1248,8 @@ function scheduleIdle(first=false){clearTimeout(autoTimer);if(asleep){scheduleDr
   }
   // ほかの画面を見ているときはしつもんで割りこまない。
   if(openSheet){scheduleIdle();return}
+  const echo=popDueEcho();
+  if(echo){speakWords(echo.w,echo.e);st.energy=clamp(st.energy-.4);updateMood();scheduleIdle();return}
   questionIdleCount++;
   if(st.learn&&st.questions&&questionIdleCount>=3&&Date.now()>=questionCooldown&&Math.random()<.46){
    if(startQuestion()){scheduleIdle();return}
@@ -1250,6 +1318,8 @@ function talk(text){const original=text.trim();if(!original)return;
   topic=learned.item.topic;
  }
  contextTopic=topic;contextUses=2;
+ // 通常会話の中で出た身近な単語も、時間がたってからぽつりと思い出す。
+ if(!asleep&&topic!=='sleep')echoFromChat(original);
  // ねんねの ことばの あとだけ じぶんで おやすみ
  st.warmth=clamp(st.warmth+2);st.energy=clamp(st.energy-1);
  speakWords(w,e);animate(anim);updateMood();store();scheduleIdle();addChat('robot',w.filter(Boolean).join('　'));
@@ -1349,6 +1419,7 @@ $('idleToggle').addEventListener('click',()=>{st.idle=!st.idle;$('idleToggle').s
 $('learnToggle').addEventListener('click',()=>{cancelFollowUp();st.learn=!st.learn;$('learnToggle').setAttribute('aria-checked',String(st.learn));if(!st.learn)clearQuestion();store();$('teachFeedback').textContent=st.learn?'また ことばを きくね':'いまは おぼえないよ'});
 $('questionToggle').addEventListener('click',()=>{cancelFollowUp();st.questions=!st.questions;$('questionToggle').setAttribute('aria-checked',String(st.questions));if(!st.questions)clearQuestion();store()});
 $('followToggle').addEventListener('click',()=>{st.followUp=!st.followUp;cancelFollowUp();$('followToggle').setAttribute('aria-checked',String(st.followUp));store()});
+$('echoToggle').addEventListener('click',()=>{st.echo=!st.echo;if(!st.echo){echoes=[];saveEchoes()}$('echoToggle').setAttribute('aria-checked',String(st.echo));store();scheduleIdle()});
 $('askNow').addEventListener('click',()=>{
  cancelFollowUp();if(!st.questions||!st.learn){$('askNow').textContent='おふ だよ';setTimeout(()=>$('askNow').textContent='きいてみて',1200);return}
  closePanel();if(pendingQuestion)clearQuestion();startQuestion();scheduleIdle();
@@ -1360,6 +1431,7 @@ $('teachForm').addEventListener('submit',e=>{
  const reply=learningReaction(result);
  $('teachFeedback').textContent='「'+result.item.word+'」　'+result.stage+'！';
  addChat('mine','「'+result.item.word+'」って いうんだよ');
+ rememberEcho(result.item.word,'','mention');
  react(reply.w,reply.e,reply.anim,true);
  input.value='';input.focus({preventScroll:true});
 });
@@ -1367,7 +1439,7 @@ $('connectForm').addEventListener('submit',e=>{
  e.preventDefault();cancelFollowUp();if(pendingQuestion)clearQuestion();const from=$('connectFrom').value,to=$('connectTo').value;
  const result=connectWords(from,to);$('connectFeedback').textContent=result;
  const item=memories.find(m=>m.word===toHira(from).trim());
- if(item&&result.includes('つながった')){react([item.word,toHira(to).trim(),'ふふ'],'happy','wiggle',true);$('connectTo').value=''}
+ if(item&&result.includes('つながった')){rememberEcho(item.word,toHira(to).trim(),'relation');react([item.word,toHira(to).trim(),'ふふ'],'happy','wiggle',true);$('connectTo').value=''}
 });
 // content:// などで自動保存が制限される環境でも単語だけを持ち運べるようにする。
 $('saveWords').addEventListener('click',()=>{
@@ -1400,16 +1472,16 @@ $('wordbook').addEventListener('toggle',()=>{
 });
 $('wordList').addEventListener('click',e=>{
  const btn=e.target.closest('[data-forget]');if(!btn)return;
- memories=memories.filter(m=>m.word!==btn.dataset.forget);if(pendingQuestion?.word===btn.dataset.forget)clearQuestion();forgetArmed=false;$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';storeWords();renderWordbook();
+ memories=memories.filter(m=>m.word!==btn.dataset.forget);echoes=echoes.filter(x=>x.subject!==btn.dataset.forget&&x.detail!==btn.dataset.forget);saveEchoes();if(pendingQuestion?.word===btn.dataset.forget)clearQuestion();forgetArmed=false;$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';storeWords();renderWordbook();
 });
 let forgetArmed=false,forgetTimer=0;
 $('forgetAll').addEventListener('click',()=>{
  if(!forgetArmed){forgetArmed=true;$('forgetAll').textContent='ほんとうに？';$('wordbookTip').textContent='もういちど おすと ぜんぶ わすれるよ';clearTimeout(forgetTimer);forgetTimer=setTimeout(()=>{forgetArmed=false;$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='おはなしから おぼえるよ'},5500);return}
- memories=[];if(pendingQuestion)clearQuestion();forgetArmed=false;clearTimeout(forgetTimer);storeWords();renderWordbook();$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';
+ const learnedWords=new Set(memories.map(x=>x.word));memories=[];echoes=echoes.filter(x=>!learnedWords.has(x.subject)&&!learnedWords.has(x.detail));saveEchoes();if(pendingQuestion)clearQuestion();forgetArmed=false;clearTimeout(forgetTimer);storeWords();renderWordbook();$('forgetAll').textContent='ぜんぶ わすれる';$('wordbookTip').textContent='また おしえてね';
 });
 $('paceSelect').addEventListener('change',e=>{st.pace=e.target.value;store();scheduleIdle()});
 $('sleepButton').addEventListener('click',()=>{cancelFollowUp();if(pendingQuestion)clearQuestion();asleep=true;$('robotWrap').classList.add('sleep');closePanel();speakWords(['おやすみ','すぅ…','ねむねむ'],'sleepy');updateMood();scheduleIdle(true)});
-$('idleToggle').setAttribute('aria-checked',String(st.idle));$('learnToggle').setAttribute('aria-checked',String(st.learn));$('questionToggle').setAttribute('aria-checked',String(st.questions));$('followToggle').setAttribute('aria-checked',String(st.followUp));$('storageWarning').hidden=wordStorageOK;renderWordbook();
+$('idleToggle').setAttribute('aria-checked',String(st.idle));$('learnToggle').setAttribute('aria-checked',String(st.learn));$('questionToggle').setAttribute('aria-checked',String(st.questions));$('followToggle').setAttribute('aria-checked',String(st.followUp));$('echoToggle').setAttribute('aria-checked',String(st.echo));$('storageWarning').hidden=wordStorageOK;renderWordbook();
 if(!['slow','normal','often'].includes(st.pace))st.pace='normal';$('paceSelect').value=st.pace;
 // とんとん と なでなでを すまほの ゆびで できるように する
 const robot=$('robotWrap');
