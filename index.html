@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#e6e7e6">
-<title>もこぼっと v1.5.29</title>
+<title>もこぼっと v1.5.30</title>
 <style>
 :root{--bg:#e6e7e6;--ink:#687473;--green:#9bd612;--teal:#4e9e98;--yellow:#ffff05;--paper:#fff;--line:#d4dbd8;--shadow:rgba(58,76,62,.09)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -3021,27 +3021,76 @@ function mazeGridValid(grid){
  for(const row of grid)for(const c of row)if(c===0)passages++;
  return passages>=65&&passages<=130&&mazeReachableCount(grid)===passages;
 }
+// v1.5.30：くねくね型の袋小路と一マスの封鎖点を生成時に点検する。
+// 一本道の曲がり角は残しながら、危険な地形が続く地図は採用しない。
+function mazeTwistyRisk(grid){
+ const key=(x,y)=>mazeKey(x,y),dirs=Object.values(MAZE_DIRECTIONS);
+ const walk=(x,y)=>y>0&&y<MAZE_H-1&&x>0&&x<MAZE_W-1&&grid[y][x]===0;
+ const near=(x,y)=>dirs.map(([dx,dy])=>[x+dx,y+dy]).filter(([nx,ny])=>walk(nx,ny));
+ const visited=new Map(),low=new Map(),cuts=new Set();let tick=0;
+ function visit(x,y,parent=null){
+  const k=key(x,y);visited.set(k,++tick);low.set(k,tick);
+  let children=0;
+  for(const [nx,ny] of near(x,y)){
+   const nk=key(nx,ny);
+   if(nk===parent)continue;
+   if(!visited.has(nk)){
+    children++;visit(nx,ny,k);low.set(k,Math.min(low.get(k),low.get(nk)));
+    if(parent!==null&&low.get(nk)>=visited.get(k))cuts.add(k);
+   }else low.set(k,Math.min(low.get(k),visited.get(nk)));
+  }
+  if(parent===null&&children>1)cuts.add(k);
+ }
+ visit(1,1);
+ let longestDeadEnd=0;
+ for(let y=1;y<MAZE_H-1;y++)for(let x=1;x<MAZE_W-1;x++){
+  if(!walk(x,y)||near(x,y).length!==1)continue;
+  let px=-1,py=-1,cx=x,cy=y,steps=0;
+  while(steps<MAZE_W*MAZE_H){
+   const adj=near(cx,cy);
+   if(steps>0&&adj.length!==2)break;
+   const next=adj.find(([nx,ny])=>nx!==px||ny!==py);
+   if(!next)break;
+   [px,py,cx,cy]=[cx,cy,next[0],next[1]];steps++;
+  }
+  longestDeadEnd=Math.max(longestDeadEnd,steps);
+ }
+ return {cutPoints:cuts.size,longestDeadEnd};
+}
 function makeMaze(forceType=null){
  const pool=MAZE_TYPES.filter(t=>t.id!==lastMazeType);
  const type=forceType&&MAZE_TYPES.find(t=>t.id===forceType)||choose(pool.length?pool:MAZE_TYPES);
+ let safestTwisty=null;
  for(let attempt=0;attempt<16;attempt++){
   const grid=mazeEmptyGrid();
   if(type.id==='branch'){
    mazeCarveBranches(grid);mazeAddConnections(grid,random(3));
   }else{
    mazeCarveDepth(grid,type.id==='twisty'?.67:.16);
-   if(type.id==='twisty')mazeAddConnections(grid,2+random(3));
+   // 以前は2〜4本だけで、長い細道の途中で敵に塞がれやすかった。
+   // 8〜11本の回り道を加える。16本以上の「わっか型」とは別の地形を保つ。
+   if(type.id==='twisty')mazeAddConnections(grid,8+random(4));
    if(type.id==='loop')mazeAddConnections(grid,16+random(7));
    if(type.id==='open'){
     mazeAddRooms(grid,3+random(2));mazeAddConnections(grid,7+random(6));
    }
   }
   mazeOpenStartRoutes(grid);
-  if(mazeGridValid(grid)){lastMazeType=type.id;return {grid,type}}
+  if(!mazeGridValid(grid))continue;
+  if(type.id==='twisty'){
+   const risk=mazeTwistyRisk(grid);
+   const score=risk.cutPoints*2+risk.longestDeadEnd*3;
+   if(!safestTwisty||score<safestTwisty.score)safestTwisty={grid,score};
+   if(risk.cutPoints>11||risk.longestDeadEnd>8)continue;
+  }
+  lastMazeType=type.id;return {grid,type};
  }
- // 念のためのフォールバック。孤立したぽよだまを生成しない。
- const grid=mazeEmptyGrid();mazeCarveDepth(grid);mazeOpenStartRoutes(grid);
- lastMazeType='twisty';return {grid,type:MAZE_TYPES[0]};
+ // 試行上限に当たっても、未調整の一本道には戻さず、最も安全な候補を採用する。
+ if(safestTwisty){lastMazeType='twisty';return {grid:safestTwisty.grid,type}}
+ const grid=mazeEmptyGrid();mazeCarveDepth(grid);
+ if(type.id==='twisty')mazeAddConnections(grid,11);
+ mazeOpenStartRoutes(grid);
+ lastMazeType=type.id;return {grid,type};
 }
 function mazeWalkable(grid,x,y){return x>=0&&y>=0&&x<MAZE_W&&y<MAZE_H&&grid[y][x]===0}
 function mazeDistance(grid,sx,sy,tx,ty){
@@ -3376,7 +3425,7 @@ let pendingDataAction=null;
 function allDataSnapshot(){
  tidyEchoes();
  return {
-  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.29',savedAt:new Date().toISOString(),
+  kind:ALL_SAVE_KIND,version:2,appVersion:'1.5.30',savedAt:new Date().toISOString(),
   state:Object.fromEntries(Object.keys(defaults).map(k=>[k,st[k]])),
   appearance:{...look},words:memories.map(m=>({...m,days:[...m.days],links:[...m.links],noLinks:[...m.noLinks],askedLinks:[...m.askedLinks]})),
   coinages:coinages.map(c=>({...c,scenes:{...c.scenes}})),echoes:echoes.map(e=>({...e})),
